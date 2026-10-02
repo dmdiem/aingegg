@@ -33,12 +33,12 @@ body{font-family:var(--body);font-size:15px;padding:0 16px}
 .hdr{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:stretch}
 .wavebox{background:#0f0c28;border:1px solid var(--line);border-radius:12px;padding:6px 12px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
 .wavebox .wrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.pausebtn{margin-left:auto;font:700 12px var(--body);letter-spacing:.08em;text-transform:uppercase;border-radius:8px;padding:5px 10px;cursor:pointer;background:#120f30;border:1px solid var(--line);color:var(--ink)}
+.pausebtn{margin-left:auto;font:700 16px/1 system-ui,-apple-system,'Segoe UI',sans-serif;border-radius:8px;width:36px;height:32px;padding:0;display:grid;place-items:center;cursor:pointer;background:#120f30;border:1px solid var(--line);color:var(--ink)}
 .pausebtn[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#1b1640}
 .pausebtn:disabled{opacity:.4;cursor:not-allowed}
-.wavebox .rrow{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:5px;flex-wrap:wrap}
-.pips5{display:flex;gap:4px}
-.pips5 i{width:16px;height:6px;border-radius:3px;background:#2b2560}
+.wavebox .rrow{display:flex;flex-direction:column;align-items:stretch;gap:5px}
+.pips5{display:flex;gap:3px;width:100%}
+.pips5 i{flex:1;height:4px;border-radius:2px;background:#2b2560}
 .pips5 i.on{background:var(--gold)}
 .pips5 i.cur{background:var(--gold);box-shadow:0 0 6px var(--gold)}
 .wavebox .wv{font-family:var(--display);font-size:20px;color:var(--holo);letter-spacing:.03em}
@@ -71,7 +71,7 @@ canvas{display:block;width:100%;height:auto}
 .bay .face{position:relative;border-radius:8px;background:radial-gradient(circle at 50% 40%,#2c2566,#16123a);aspect-ratio:10/9;display:grid;place-items:center;overflow:hidden}
 .bay canvas{width:100%;max-width:140px}
 .rank{position:absolute;left:6px;top:4px;font-family:var(--display);font-size:20px;line-height:1;text-shadow:0 2px 0 rgba(0,0,0,.6)}
-.bay .meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;gap:4px}
+.bay .meta{display:flex;justify-content:center;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;gap:4px}
 .bay .meta b{color:var(--ink)}
 .bay .role{font-size:11px;color:var(--muted);line-height:1.25;min-height:2.5em}
 .lvl{font:700 13px var(--body);background:var(--hull-2);border:1px solid var(--line);color:var(--gold);border-radius:8px;padding:6px;cursor:pointer;font-variant-numeric:tabular-nums}
@@ -91,9 +91,9 @@ canvas{display:block;width:100%;height:auto}
 .golden .eggi{width:14px;height:14px;margin:0}
 .golden:disabled{filter:grayscale(.9);opacity:.45;cursor:not-allowed}
 .deploy{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"wallet collect go" "hack gold go";gap:8px 10px;align-items:center}
-.deploy .wallet{grid-area:wallet}.deploy .collect{grid-area:collect}.deploy .go{grid-area:go;align-self:stretch;justify-content:center;width:112px;padding:8px 6px;white-space:nowrap}.goldrow{grid-area:gold;display:flex;gap:6px;justify-content:space-between;align-items:stretch;min-width:0}
+.deploy .wallet{grid-area:wallet}.deploy .collect{grid-area:collect}.deploy .go{grid-area:go;align-self:stretch;justify-content:center;width:112px;padding:8px 6px;white-space:nowrap}.goldrow{grid-area:gold;display:flex;gap:6px;align-items:stretch;min-width:0}
 .goldrow .iconbtn{white-space:nowrap}
-.deploy .golden{padding:5px 12px}
+.deploy .golden{padding:5px 12px;flex:1;min-width:0}
 .hackbtn{padding:4px 8px}
 .hackbtn.locked{border-color:#3b3375;border-style:solid;color:#5a5480;background:#100d26;cursor:default}
 .hackrow{grid-area:hack;display:flex;gap:6px;align-items:stretch}
@@ -151,7 +151,7 @@ button:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
 .side{display:flex;flex-direction:column;gap:12px;min-width:0}
 .panel{background:var(--hull);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
 .panel h3{font-family:var(--display);font-weight:400;font-size:15px;color:var(--holo);margin:0 0 10px;letter-spacing:.04em}
-.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .stats div{background:#120f30;border-radius:10px;padding:6px 10px}
 .stats span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
 .stats b{font-family:var(--display);font-weight:400;font-size:18px;font-variant-numeric:tabular-nums}
@@ -191,6 +191,40 @@ a{color:var(--holo)}
 .odds th{font-family:var(--display);font-weight:400;font-size:13px}
 .odds tr.cur td{color:var(--gold);font-weight:700}
 .odds td{color:var(--muted)}
+
+.iconbtn .short{display:none}
+.lvl,#collect,.iconbtn,.golden{white-space:nowrap}
+/* ---------- phone layout ---------- */
+@media (max-width:560px){
+  body{padding:0 10px}
+  .console{padding:10px;gap:8px}
+  .hdr{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .hdr .wavebox{grid-column:1/-1}
+  .wavebox .wrow{flex-wrap:nowrap;gap:10px}
+  .wavebox .wv{font-size:18px}
+  .wavebox .tm{font-size:24px}
+  .wavebox .rrow{flex-wrap:nowrap}
+  .rewardbox{flex-direction:row;align-items:stretch;justify-content:space-around;gap:10px;padding:6px 10px}
+  .rewardbox .rewhalf{align-items:flex-start;flex:1}
+  .rewardbox .rewhalf+.rewhalf{border-top:0;padding-top:0;border-left:1px solid var(--line);padding-left:10px}
+  .ctl{gap:4px}
+  .ctl .iconbtn,.ctl .hackbtn{padding:4px 8px;font-size:11px}
+  .iconbtn .full{display:none}.iconbtn .short{display:inline}
+  .bays{gap:6px}
+  .bay{padding:6px;gap:4px}
+  .bay .role{display:none}
+  .bay .meta{font-size:11px}
+  .lvl{font-size:11px;padding:6px 2px;letter-spacing:0}
+  .deploy{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"wallet go" "collect go" "hack hack" "gold gold";gap:8px}
+  .deploy .go{width:auto;min-height:100%}
+  #collect{font-size:11px;letter-spacing:.02em;padding:6px 4px}
+  .hackrow .iconbtn{width:100%}
+  .goldrow{justify-content:stretch}
+  .goldrow>*{flex:1;min-width:0;justify-content:center}
+  .goldrow .golden{padding:6px 8px}
+  .hackmenu{left:10px;right:10px;top:150px}
+  .confirm.floating{right:10px;left:10px;width:auto;top:150px}
+}
 @media (prefers-reduced-motion:reduce){.field.warn{animation:none;border-color:var(--danger)}}
 </style>
 </head>
@@ -198,13 +232,13 @@ a{color:var(--holo)}
 <div class="wrap">
   <div class="top">
     <h1>Aingegg Sidekick</h1>
-    <p>Deploy sidekicks for 150 Aing points, level them up, and survive 10 waves before the field fills to 50 enemies. Aing points arrive at 300 per minute, so every deploy is a level you didn&rsquo;t buy.</p>
+    <p>Pull egg rangers, level them up, survive 10 waves.</p>
   </div>
 
   <div class="layout">
     <div class="console" id="console">
       <div class="hdr">
-        <div class="wavebox"><div class="rrow"><span class="dr" id="dr"></span><span class="pips5" id="pips5"></span></div><div class="wrow"><span class="wv" id="wv">READY</span><span class="tm" id="tm">01:30</span><button class="pausebtn" id="pauseBtn" aria-pressed="false" disabled>Pause</button></div></div>
+        <div class="wavebox"><div class="rrow"><span class="dr" id="dr"></span><span class="pips5" id="pips5"></span></div><div class="wrow"><span class="wv" id="wv">READY</span><span class="tm" id="tm">01:30</span><button class="pausebtn" id="pauseBtn" aria-pressed="false" aria-label="Pause" title="Pause (P)" disabled>⏸︎</button></div></div>
         <div class="rewardbox">
           <div class="rewhalf"><span>This run</span><b><span id="rew">0</span><img class="eggi" id="rewIcon" alt=""></b></div>
           <div class="rewhalf"><span>Stash</span><b><span id="stash">0</span><img class="eggi" id="stashIcon" alt=""></b></div>
@@ -212,7 +246,7 @@ a{color:var(--holo)}
         <div class="ctl">
           <button class="hackbtn" id="hack" aria-expanded="false" aria-controls="hackMenu">HACK</button>
           <button class="iconbtn x" id="quit" aria-label="Restart run">✕ Restart</button>
-          <button class="iconbtn x" id="wipe">Reset entire game</button>
+          <button class="iconbtn x" id="wipe"><span class="full">Reset entire game</span><span class="short">Reset game</span></button>
         </div>
       </div>
       <div class="field" id="field"><canvas id="cv" width="540" height="380" aria-label="Battle field"></canvas><div class="pop" id="pop" role="status" hidden></div></div>
@@ -262,19 +296,6 @@ a{color:var(--holo)}
 
     <aside class="side">
       <div class="panel">
-        <h3>Mate rank</h3>
-        <div class="ladder" id="ladder"></div>
-        <p class="note" id="rankNote" style="margin-top:8px"></p>
-      </div>
-      <div class="panel">
-        <h3>This run</h3>
-        <div class="stats">
-          <div><span>Deploys</span><b id="sDep">0</b></div>
-          <div><span>Enemies</span><b id="sEn">0/50</b></div>
-          <div><span>Best wave</span><b id="sBest">0</b></div>
-        </div>
-      </div>
-      <div class="panel">
         <h3>Deploy log</h3>
         <ul class="log" id="log"><li><span class="n">—</span><span></span><span class="w">Press Go to deploy your first sidekick. The run starts immediately.</span></li></ul>
       </div>
@@ -287,11 +308,12 @@ a{color:var(--holo)}
           <span style="color:#ffd23f">Yellow (right)</span><span>1.5×</span><span>1.5×</span>
         </div>
         <ul class="tips" style="margin-top:12px">
+          <li>Your Mate rank goes Junior → Senior → Veteran → Elite → Master. Each all clear promotes you one step, and higher ranks pull better sidekicks more often.</li>
           <li>The first three deploys fill Red, Black, Yellow. After that a deploy only helps if it beats your <b>lowest</b> rank, and it replaces that one (ties: Red, then Yellow, then Black). Equal or lower is wasted.</li>
           <li>Sidekicks fire straight up into a shared HP pool: Red pours into the mobs, Black into the bosses, Yellow into the mobs and then the bosses.</li>
           <li>Levels cost 100 + 5 per level, up to 10. A level keeps the value of the rank it was bought at, so levels on an S are worth the most.</li>
           <li>Each wave drops in all at once, from 12 enemies in wave 1 to 30 in wave 10. Waves 1–2 are mobs only. Waves 3–5 bring one boss, 6–8 two, and 9–10 three, with a bigger final boss in wave 10. Mobs get tougher every wave.</li>
-          <li>Leftover enemies carry into the next wave. Reach 50 and the deployment ends. Clear every enemy in wave 10 for an all clear.</li>
+          <li>Waves start at 1:30 and get shorter, down to 1:00 for wave 10. Leftover enemies carry into the next wave. Reach 50 and the deployment ends. Clear every enemy in wave 10 for an all clear.</li>
         </ul>
       </div>
     </aside>
@@ -320,8 +342,9 @@ const ODDS_BY=[[30,26,22,14,6,2],[26,25,22,15,8,4],[22,23,22,17,10,6],[18,21,22,
 const RBASE=[12,18,28,42,70,140];         // base damage/sec by rank
 const LVF=.35;                            // each level adds 35% of the rank it was bought at
 const DEPLOY=150, START_PTS=300, PTS_PER_MIN=300, WAVE_T=90, SPAWN_T=80, CAP=50;
-const REQ=[18,45,100,200,360,580,820,1080,1320,1150];   // mob HP pool per wave = REQ × 90
-const BOSSES=[[],[],[1500],[2100],[3000],[2400,2400],[3000,3000],[3600,3600],[3000,3000,3600],[2700,2700,4800]];   // boss HP per wave
+const WAVE_TS=[90,87,83,80,77,73,70,67,63,60];   // seconds per wave: 1:30 shrinking to 1:00
+const REQ=[17,41,88,169,293,447,606,764,878,583];   // mob HP pool per wave = REQ × 90 (tuned for the shrinking timers)
+const BOSSES=[[],[],[1275],[1785],[2550],[2040,2040],[2550,2550],[3060,3060],[2550,2550,3060],[2295,2295,4080]];   // boss HP per wave
 const BAYS=[
   {name:'Red',col:'#ff5b5b',trim:'#ffd0d0',norm:2,boss:1,role:'2× damage to normal enemies'},
   {name:'Black',col:'#3a3a58',trim:'#ffc94a',norm:1,boss:2,role:'2× damage to bosses'},
@@ -337,7 +360,7 @@ function claimState(){if(P.claims.week!==weekKey())P.claims={week:weekKey(),coun
 
 /* ---------- run state ---------- */
 let G=null,paused=false;
-function fresh(){if(paused){paused=false;const b=document.getElementById('pauseBtn');if(b){b.setAttribute('aria-pressed','false');b.textContent='Pause'}}if(G&&G.sNext){P.earned+=GOLD_COST;store.set('earned',P.earned)}G={phase:'idle',slots:[null,null,null],deploys:0,pts:START_PTS,meter:0,wave:0,wt:WAVE_T,q:[],spawnT:0,iv:1,en:[],shots:[],fx:[],log:[],result:null,claimed:false};}
+function fresh(){if(paused){paused=false;const b=document.getElementById('pauseBtn');if(b){b.setAttribute('aria-pressed','false');b.textContent='⏸︎';b.setAttribute('aria-label','Pause')}}if(G&&G.sNext){P.earned+=GOLD_COST;store.set('earned',P.earned)}G={phase:'idle',slots:[null,null,null],deploys:0,pts:START_PTS,meter:0,wave:0,wt:WAVE_T,q:[],spawnT:0,iv:1,en:[],shots:[],fx:[],log:[],result:null,claimed:false};}
 fresh();
 let speed=1;
 
@@ -345,7 +368,7 @@ const slotDps=s=>s?RBASE[s.rank]+s.lv.reduce((a,r)=>a+RBASE[r]*LVF,0):0;
 const lvCost=s=>100+5*s.lv.length;
 function rollRank(){const O=ODDS_BY[P.drank];let t=Math.random()*100;for(let i=0;i<6;i++){t-=O[i];if(t<0)return i}return 0}
 
-function setPaused(v){paused=!!v&&G.phase==='live';const b=$('pauseBtn');b.setAttribute('aria-pressed',paused);b.textContent=paused?'Resume':'Pause';render()}
+function setPaused(v){paused=!!v&&G.phase==='live';const b=$('pauseBtn');b.setAttribute('aria-pressed',paused);b.textContent=paused?'▶︎':'⏸︎';b.setAttribute('aria-label',paused?'Resume':'Pause');b.title=paused?'Resume (P)':'Pause (P)';render()}
 function deploy(){if(paused)return;
   if(G.phase==='over'||G.pts<DEPLOY)return;
   G.pts-=DEPLOY;G.deploys++;const r=G.sNext?5:rollRank();G.sNext=false;let msg;
@@ -367,7 +390,7 @@ function goldHatch(){if(paused)return;
   popup('good','S-rank guaranteed!','Your next <b style="display:inline;font:inherit;color:var(--gold)">Go</b> will summon an <span style="color:'+RCOL[5]+'">S</span>-rank.');
   render();
 }
-const GREETS=['hey {m}','heeeeey {m}','hey {m}...','oh hey {m}','heyyy {m}','hey hey {m}','ohi','ohey','hey {m} :)','sup {m}'];
+const GREETS=['hey {m}','heeeeey {m}','hey {m}...','oh hey {m}','heyyy {m}','hey hey {m}','ohi','ohey','hey {m} :)','sup {m}','ay {m}','time to werk','r {m}','rdy {m}','k im ready','yup','yupp','fudb','aayyy'];
 let greetBag=[],lastGreet=null;
 function nextGreet(){if(!greetBag.length){greetBag=GREETS.slice();for(let k=greetBag.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[greetBag[k],greetBag[j]]=[greetBag[j],greetBag[k]]}
     if(greetBag[greetBag.length-1]===lastGreet)greetBag.unshift(greetBag.pop())}
@@ -378,7 +401,7 @@ function greet(i){const others=G.slots.some((o,k)=>o&&k!==i);let g=nextGreet();
 function popup(kind,title,html){const p=$('pop');p.className='pop '+kind;p.innerHTML=`<b>${title}</b>${html}`;p.hidden=false;clearTimeout(p._t);p._t=setTimeout(()=>p.hidden=true,2200)}
 function levelUp(i){if(paused)return;const s=G.slots[i];if(!s||G.phase==='over'||s.lv.length>=10||G.pts<lvCost(s))return;
   G.pts-=lvCost(s);s.lv.push(s.rank);s.pop=.4;render()}
-function startWave(w){G.wave=w;G.wt=WAVE_T;const sp={c:10+2*w,req:REQ[w-1],bosses:BOSSES[w-1]},c=sp.c,hp=sp.req*WAVE_T/c;const q=[];
+function startWave(w){G.wave=w;G.wt=WAVE_TS[w-1];const sp={c:10+2*w,req:REQ[w-1],bosses:BOSSES[w-1]},c=sp.c,hp=sp.req*90/c;const q=[];
   for(let i=0;i<c;i++)q.push({boss:false,hp});
   sp.bosses.forEach((h,j,a)=>q.splice(Math.floor(q.length*(j+1)/(a.length+1)),0,{boss:true,hp:h,big:j===a.length-1&&w===10}));
   G.q=[];q.forEach(spawnEnemy);
@@ -512,23 +535,22 @@ function drawShip(c,x,y,bay,rank,t,firing,lv=0){
   c.restore();
 }
 function lighten(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b2=n&255;r=Math.round(r+(255-r)*f);g=Math.round(g+(255-g)*f);b2=Math.round(b2+(255-b2)*f);return `rgb(${r},${g},${b2})`}
-function drawEnemy(e,t){const x=e.x,y=e.y+Math.sin(t*4+e.wob)*2,r=e.r;
-  if(e.boss){cx.fillStyle=e.hit>0?'#fff':'#e23d96';cx.beginPath();cx.ellipse(x,y,r,r*.85,0,0,7);cx.fill();
-    cx.fillStyle='#ffc94a';cx.beginPath();cx.moveTo(x-r*.7,y-r*.5);cx.lineTo(x-r*.9,y-r*1.3);cx.lineTo(x-r*.3,y-r*.75);cx.fill();
-    cx.beginPath();cx.moveTo(x+r*.7,y-r*.5);cx.lineTo(x+r*.9,y-r*1.3);cx.lineTo(x+r*.3,y-r*.75);cx.fill();
-    for(const s of[-1,1]){cx.fillStyle='#fff';cx.beginPath();cx.arc(x+s*r*.32,y-3,7,0,7);cx.fill();cx.fillStyle='#160a24';cx.beginPath();cx.arc(x+s*r*.32,y-2,3.5,0,7);cx.fill()}
-    const w=r*2.2;cx.fillStyle='rgba(0,0,0,.6)';cx.fillRect(x-w/2,y-r-20,w,6);cx.fillStyle='#ff4fa3';cx.fillRect(x-w/2,y-r-20,w*Math.max(0,e.hp)/e.max,6);
-  }else{ // little blue space-cow
-    const hit=e.hit>0,body=hit?'#fff':'#4fa8ff',dk=hit?'#ddd':'#2a6fd6',sw=Math.sin(t*3+e.wob)*.25;
-    cx.fillStyle=hit?'#fff':'#f3ead2';for(const d of[-1,1]){cx.beginPath();cx.moveTo(x+d*r*.45,y-r*.6);cx.quadraticCurveTo(x+d*r*.95,y-r*1.05,x+d*r*.75,y-r*1.35);cx.quadraticCurveTo(x+d*r*.6,y-r*.95,x+d*r*.2,y-r*.7);cx.fill()}
-    cx.fillStyle=dk;for(const d of[-1,1]){cx.save();cx.translate(x+d*r*.95,y-r*.25);cx.rotate(d*(.5+sw));cx.beginPath();cx.ellipse(0,0,r*.45,r*.22,0,0,7);cx.fill();cx.restore()}
-    cx.fillStyle=body;cx.beginPath();cx.ellipse(x,y,r*.95,r*.85,0,0,7);cx.fill();
-    if(!hit){cx.save();cx.beginPath();cx.ellipse(x,y,r*.95,r*.85,0,0,7);cx.clip();cx.fillStyle='#a6d4ff';
-      cx.beginPath();cx.ellipse(x-r*.55,y-r*.5,r*.4,r*.3,.4,0,7);cx.fill();cx.beginPath();cx.ellipse(x+r*.6,y+r*.05,r*.3,r*.35,-.3,0,7);cx.fill();cx.restore()}
-    cx.fillStyle=hit?'#fff':'#bfe3ff';cx.beginPath();cx.ellipse(x,y+r*.42,r*.62,r*.38,0,0,7);cx.fill();
-    cx.fillStyle='#1d4f9e';cx.beginPath();cx.ellipse(x-r*.22,y+r*.42,r*.09,r*.12,0,0,7);cx.ellipse(x+r*.22,y+r*.42,r*.09,r*.12,0,0,7);cx.fill();
-    cx.fillStyle='#0b1636';cx.beginPath();cx.arc(x-r*.36,y-r*.12,r*.14,0,7);cx.arc(x+r*.36,y-r*.12,r*.14,0,7);cx.fill();
-    cx.fillStyle='#fff';cx.beginPath();cx.arc(x-r*.4,y-r*.17,r*.05,0,7);cx.arc(x+r*.32,y-r*.17,r*.05,0,7);cx.fill()}
+const COW_BLUE={body:'#4fa8ff',ear:'#2a6fd6',spot:'#a6d4ff',muzzle:'#bfe3ff',nose:'#1d4f9e',horn:'#f3ead2'};
+const COW_PINK={body:'#ff6fb5',ear:'#d63f8e',spot:'#ffc2e0',muzzle:'#ffd6ea',nose:'#a3245f',horn:'#ffc94a'};
+function drawCow(x,y,r,pal,hit,sw){
+  cx.fillStyle=hit?'#fff':pal.horn;for(const d of[-1,1]){cx.beginPath();cx.moveTo(x+d*r*.45,y-r*.6);cx.quadraticCurveTo(x+d*r*.95,y-r*1.05,x+d*r*.75,y-r*1.35);cx.quadraticCurveTo(x+d*r*.6,y-r*.95,x+d*r*.2,y-r*.7);cx.fill()}
+  cx.fillStyle=hit?'#ddd':pal.ear;for(const d of[-1,1]){cx.save();cx.translate(x+d*r*.95,y-r*.25);cx.rotate(d*(.5+sw));cx.beginPath();cx.ellipse(0,0,r*.45,r*.22,0,0,7);cx.fill();cx.restore()}
+  cx.fillStyle=hit?'#fff':pal.body;cx.beginPath();cx.ellipse(x,y,r*.95,r*.85,0,0,7);cx.fill();
+  if(!hit){cx.save();cx.beginPath();cx.ellipse(x,y,r*.95,r*.85,0,0,7);cx.clip();cx.fillStyle=pal.spot;
+    cx.beginPath();cx.ellipse(x-r*.55,y-r*.5,r*.4,r*.3,.4,0,7);cx.fill();cx.beginPath();cx.ellipse(x+r*.6,y+r*.05,r*.3,r*.35,-.3,0,7);cx.fill();cx.restore()}
+  cx.fillStyle=hit?'#fff':pal.muzzle;cx.beginPath();cx.ellipse(x,y+r*.42,r*.62,r*.38,0,0,7);cx.fill();
+  cx.fillStyle=pal.nose;cx.beginPath();cx.ellipse(x-r*.22,y+r*.42,r*.09,r*.12,0,0,7);cx.ellipse(x+r*.22,y+r*.42,r*.09,r*.12,0,0,7);cx.fill();
+  cx.fillStyle='#0b1636';cx.beginPath();cx.arc(x-r*.36,y-r*.12,r*.14,0,7);cx.arc(x+r*.36,y-r*.12,r*.14,0,7);cx.fill();
+  cx.fillStyle='#fff';cx.beginPath();cx.arc(x-r*.4,y-r*.17,r*.05,0,7);cx.arc(x+r*.32,y-r*.17,r*.05,0,7);cx.fill()}
+function drawEnemy(e,t){const x=e.x,y=e.y+Math.sin(t*4+e.wob)*2,r=e.r,sw=Math.sin(t*3+e.wob)*.25;
+  if(e.boss){drawCow(x,y,r,COW_PINK,e.hit>0,sw);
+    const w=r*2.2;cx.fillStyle='rgba(0,0,0,.6)';cx.fillRect(x-w/2,y-r*1.35-12,w,6);cx.fillStyle='#ff4fa3';cx.fillRect(x-w/2,y-r*1.35-12,w*Math.max(0,e.hp)/e.max,6);
+  }else drawCow(x,y,r,COW_BLUE,e.hit>0,sw);
 }
 function draw(t,dt){
   cx.fillStyle='#071a22';cx.fillRect(0,0,W,H);
@@ -570,8 +592,12 @@ function draw(t,dt){
   cx.fillStyle='#4fa8ff';cx.beginPath();cx.roundRect(18,16,14,13,3);cx.fill();
   cx.font='15px Bungee, sans-serif';cx.textAlign='left';cx.fillStyle=danger?'#fff':'#5ef2e6';cx.fillText(n+'/50',38,29);
   const mobHp=G.en.filter(e=>!e.boss).reduce((a,e)=>a+e.hp,0),bossHp=G.en.filter(e=>e.boss).reduce((a,e)=>a+e.hp,0);
+  // deploy counter (top right)
+  {const txt='DEPLOYS '+G.deploys;cx.font='13px Bungee, sans-serif';const tw=cx.measureText(txt).width+20,x0=W-10-tw;
+   cx.fillStyle='rgba(8,26,34,.85)';cx.beginPath();cx.roundRect(x0,10,tw,26,6);cx.fill();cx.strokeStyle='rgba(94,242,230,.5)';cx.lineWidth=1;cx.stroke();
+   cx.fillStyle='#5ef2e6';cx.textAlign='left';cx.fillText(txt,x0+10,28)}
   if(paused&&G.phase==='live'){cx.fillStyle='rgba(7,10,26,.72)';cx.fillRect(0,0,W,H);cx.textAlign='center';cx.font='34px Bungee, sans-serif';cx.fillStyle='#ffc94a';cx.fillText('PAUSED',W/2,H/2);
-    cx.font='600 14px "Chakra Petch",sans-serif';cx.fillStyle='#eeeaff';cx.fillText('Press Resume (or P) to keep going',W/2,H/2+24)}
+    cx.font='600 14px "Chakra Petch",sans-serif';cx.fillStyle='#eeeaff';cx.fillText('Press ▶ (or P) to keep going',W/2,H/2+24)}
   if(G.phase==='idle'){cx.fillStyle='rgba(7,26,34,.7)';cx.fillRect(0,0,W,H);cx.textAlign='center';cx.font='22px Bungee, sans-serif';cx.fillStyle='#ffc94a';
     cx.fillText('PRESS GO TO DEPLOY',W/2,H/2-6);cx.font='600 14px "Chakra Petch",sans-serif';cx.fillStyle='#eeeaff';cx.fillText('Waves start the moment your first sidekick lands.',W/2,H/2+18)}
 }
@@ -585,7 +611,7 @@ BAYS.forEach((b,i)=>{const d=document.createElement('div');d.className='bay';d.i
    <button class="lvl" id="lb${i}">Level up · 100</button>`;bays.appendChild(d);$('lb'+i).onclick=()=>levelUp(i)});
 function drawPortrait(i,t){const c=$('pc'+i).getContext('2d');c.clearRect(0,0,100,90);const s=G.slots[i];
   if(!s){c.save();c.globalAlpha=.25;drawMascot(c,i,0,t,0,0);c.restore();c.fillStyle='rgba(13,10,32,.55)';c.fillRect(0,0,100,90);
-    c.fillStyle='#eeeaff';c.font='700 12px "Chakra Petch",sans-serif';c.textAlign='center';c.fillText('ON STANDBY',50,49);return}
+    c.fillStyle='#eeeaff';c.font='700 11px "Chakra Petch",sans-serif';c.textAlign='center';c.fillText('STANDBY',46,49);return}
   drawMascot(c,i,s.rank,t,s.pop||0,mascotFor(s.rank))}
 function fmt(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function rewardFor(done){return done<=0?0:EGGS[Math.min(10,done-1)]}   // done = waves gotten through (11 = all clear)
@@ -605,16 +631,14 @@ function render(){
     const vb=$('pp'+i),pips=vb.children;for(let k=0;k<10;k++){const on=s&&k<s.lv.length;pips[k].className=on?'on':'';pips[k].style.background=on?RCOL[s.lv[k]]:'';pips[k].style.color=on?RCOL[s.lv[k]]:''}vb.classList.toggle('max',!!s&&s.lv.length>=10);
     const b=$('lb'+i);if(!s){b.disabled=true;b.textContent='Level up'}else if(s.lv.length>=10){b.disabled=true;b.textContent='Max level'}
     else{b.disabled=G.pts<lvCost(s)||G.phase==='over';b.textContent='Level up · '+lvCost(s)}}
-  $('sDep').textContent=G.deploys;$('sEn').textContent=G.en.length+'/50';$('sEn').style.color=G.en.length>=40?'var(--danger)':'';
-  $('sBest').textContent=P.best>=11?'Clear':P.best;
+  
+  
   const log=$('log');const lk=G.log.length+'|'+(G.log[0]?G.log[0].msg:'');if(log._k===lk){}else if((log._k=lk)&&G.log.length){log.innerHTML=G.log.slice(0,30).map(e=>`<li><span class="n"${e.r==null?' style="color:#7cff7a;font-size:10px"':''}>${typeof e.n==='number'?'#'+e.n:e.n}</span><span class="r" style="color:${e.r==null?'#7cff7a':RCOL[e.r]}">${e.r==null?'⚡':RANKS[e.r]}</span><span class="w">${e.msg}</span></li>`).join('')}
   else log.innerHTML='<li><span class="n">—</span><span></span><span class="w">Press Go to deploy your first sidekick. The run starts immediately.</span></li>';
   $('field').classList.toggle('warn',G.en.length>=40&&G.phase==='live');
   renderBoosts();renderRank();
 }
-function renderRank(){
-  $('ladder').innerHTML=DRANKS.map((n,i)=>`<div class="${i===P.drank?'cur':i<P.drank?'done':''}">${n}</div>`).join('');
-  $('rankNote').textContent=P.drank<4?`Clear all 10 waves to reach ${DRANKS[P.drank+1]} Mate. All clears so far: ${P.clears}.`:`Master Mate. Best odds unlocked. All clears: ${P.clears}.`}
+function renderRank(){}
 let wipeArm=false;
 function renderMeter(){$('meter').style.width=(G.meter/300*100)+'%';const full=G.meter>=300;$('collect').disabled=!full||G.phase!=='live';$('collect').textContent=full?'Collect 300':'Collectaing… '+fmt((300-G.meter)/(PTS_PER_MIN/60))}
 $('collect').onclick=()=>{if(!paused&&G.meter>=300){G.meter=0;G.pts+=300;render()}};
@@ -719,7 +743,9 @@ function loop(now){let real=Math.max(0,(now-last)/1000);last=now;const t=now/100
     renderMeter();}
   catch(e){console.error('Aingegg Sidekick:',e)}
   requestAnimationFrame(loop)}
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.phase==='live')setPaused(true)});
+// Keeps running in the background: browsers stop animation frames in hidden tabs, so a timer advances the game instead.
+let bgTick=null;function catchUp(){const n=performance.now();try{simulate((n-last)/1000)}catch(e){console.error('Aingegg Sidekick:',e)}last=n}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInterval(bgTick);bgTick=setInterval(catchUp,1000)}else{clearInterval(bgTick);bgTick=null;catchUp()}});
 const EGG_ICON=(()=>{const k=document.createElement('canvas');k.width=k.height=64;const c=k.getContext('2d');
   const g=c.createRadialGradient(24,20,3,32,34,30);g.addColorStop(0,'#fffaf0');g.addColorStop(.6,'#f6dcc0');g.addColorStop(1,'#d9a985');
   c.fillStyle=g;eggPath(c,32,33,40,54);c.fill();c.strokeStyle='rgba(120,70,40,.35)';c.lineWidth=1.5;c.stroke();
