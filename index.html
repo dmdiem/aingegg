@@ -135,6 +135,7 @@ button:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
 .winbox input:focus{outline:2px solid var(--holo)}
 .winbox img{width:100%;max-width:480px;border-radius:12px;border:1px solid var(--gold);box-shadow:0 0 24px rgba(255,201,74,.3)}
 .result{position:absolute;inset:0;background:rgba(9,7,24,.88);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center}
+.result .quip{margin:-4px 0 0;font-size:17px;font-weight:700;color:var(--ink);letter-spacing:.02em}
 .result h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,7vw,44px);margin:0;line-height:1}
 .result .sq{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .result .sq .rc{background:var(--hull-2);border:1px solid var(--line);border-radius:10px;padding:6px;width:96px;position:relative;font-weight:700;font-variant-numeric:tabular-nums}
@@ -286,6 +287,7 @@ a{color:var(--holo)}
       </div>
       <div class="result" id="result" hidden>
         <h2 id="resTitle">ALL CLEAR</h2>
+        <p class="quip" id="resQuip"></p>
         <div class="sq" id="resSquad"></div>
         <div><div class="amt"><img class="eggi" id="resIcon" alt=""><span id="resAmt">500</span></div><div class="note" id="resItem"></div></div>
         <div class="row"><button class="btn win" id="winBtn" hidden>Make win card</button><button class="btn pri" id="again">Play again</button></div>
@@ -313,7 +315,7 @@ a{color:var(--holo)}
           <li>Sidekicks fire straight up into a shared HP pool: Red pours into the mobs, Black into the bosses, Yellow into the mobs and then the bosses.</li>
           <li>Levels cost 100 + 5 per level, up to 10. A level keeps the value of the rank it was bought at, so levels on an S are worth the most.</li>
           <li>Each wave drops in all at once, from 12 enemies in wave 1 to 30 in wave 10. Waves 1–2 are mobs only. Waves 3–5 bring one boss, 6–8 two, and 9–10 three, with a bigger final boss in wave 10. Mobs get tougher every wave.</li>
-          <li>Waves start at 1:30 and get shorter, down to 1:00 for wave 10. Leftover enemies carry into the next wave. Reach 50 and the deployment ends. Clear every enemy in wave 10 for an all clear.</li>
+          <li>Wave 1 lasts 1:30, every wave after that 1:00. Leftover enemies carry into the next wave. Reach 50 and the deployment ends. Clear every enemy in wave 10 for an all clear.</li>
         </ul>
       </div>
     </aside>
@@ -339,12 +341,12 @@ const RANKS=['E','D','C','B','A','S'];
 const RCOL=['#9196ad','#6fb7ff','#3fd8e8','#ff7fd0','#ffb347','#7be38b'];
 const DRANKS=['Junior','Senior','Veteran','Elite','Master'];
 const ODDS_BY=[[30,26,22,14,6,2],[26,25,22,15,8,4],[22,23,22,17,10,6],[18,21,22,19,12,8],[14,19,22,20,15,10]]; // % per deploy, E..S
-const RBASE=[12,18,28,42,70,140];         // base damage/sec by rank
-const LVF=.35;                            // each level adds 35% of the rank it was bought at
+const RBASE=[12,16,22,36,65,115];         // base damage/sec by rank
+const LVF=.6;                            // each level adds 60% of the base of the rank it was bought at
 const DEPLOY=150, START_PTS=300, PTS_PER_MIN=300, WAVE_T=90, SPAWN_T=80, CAP=50;
-const WAVE_TS=[90,87,83,80,77,73,70,67,63,60];   // seconds per wave: 1:30 shrinking to 1:00
-const REQ=[17,41,88,169,293,447,606,764,878,583];   // mob HP pool per wave = REQ × 90 (tuned for the shrinking timers)
-const BOSSES=[[],[],[1275],[1785],[2550],[2040,2040],[2550,2550],[3060,3060],[2550,2550,3060],[2295,2295,4080]];   // boss HP per wave
+const WAVE_TS=[90,60,60,60,60,60,60,60,60,60];   // seconds per wave: 1:30 for wave 1, then 1:00 (matches the original's ~10.5 min run)
+const REQ=[10.8,27,60,120,216,127.6,180.4,237.6,290.4,402.5];   // mob HP pool per wave = REQ × 90 (tuned to the community clear sheet)
+const BOSSES=[[],[],[3450],[4830],[6900],[5520,5520],[6900,6900],[8280,8280],[6900,6900,8280],[6210,6210,11040]];   // boss HP per wave
 const BAYS=[
   {name:'Red',col:'#ff5b5b',trim:'#ffd0d0',norm:2,boss:1,role:'2× damage to normal enemies'},
   {name:'Black',col:'#3a3a58',trim:'#ffc94a',norm:1,boss:2,role:'2× damage to bosses'},
@@ -683,7 +685,9 @@ addEventListener('keydown',e=>{if(e.target.tagName==='BUTTON'&&(e.key===' '||e.k
 
 function renderBoosts(){$('stash').textContent=P.earned.toLocaleString()}
 
+const CLEAR_QUIPS=['nice werk mat','good werk mat','good job mat','gz mat'];
 function showResult(){const r=G.result;
+  $('resQuip').textContent=r.kind==='clear'?CLEAR_QUIPS[Math.floor(Math.random()*CLEAR_QUIPS.length)]:'nice try mat';
   $('resTitle').textContent=G.won?(P.hacked?'YOU BEAT THE GAME*':'YOU BEAT THE GAME'):r.kind==='clear'?'ALL CLEAR':r.kind==='w10'?'WAVE 10':'GAME OVER · WAVE '+r.reached;
   $('resTitle').style.color=r.kind==='clear'?'var(--rS)':r.kind==='w10'?'var(--gold)':'var(--danger)';
   $('resSquad').innerHTML=G.slots.map((s,i)=>`<div class="rc"><span class="rank" style="color:${s?RCOL[s.rank]:'var(--muted)'}">${s?RANKS[s.rank]:'–'}</span><canvas id="rp${i}" width="100" height="90"></canvas><div class="vbar${s&&s.lv.length>=10?' max':''}" style="top:8px;bottom:26px;right:5px">${Array.from({length:10},(_,k)=>s&&k<s.lv.length?`<i class="on" style="background:${RCOL[s.lv[k]]};color:${RCOL[s.lv[k]]}"></i>`:'<i></i>').join('')}</div><div class="lv">${s?'▲ '+s.lv.length:'Empty'}</div></div>`).join('');
