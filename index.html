@@ -374,7 +374,7 @@ function startWave(w){G.wave=w;G.wt=WAVE_T;const sp={c:10+2*w,req:REQ[w-1],bosse
   if(w>1)G.fx.push({banner:'WAVE '+w,sub:sp.bosses.length?sp.bosses.length+(sp.bosses.length>1?' bosses':' boss')+' incoming':'',l:1.8});}
 function finish(kind){
   G.phase='over';P.runs=(P.runs||0)+1;store.set('runs',P.runs);G.won=kind==='clear'&&P.drank===4;
-  const reached=kind==='clear'?11:G.wave;const done=kind==='clear'?11:kind==='w10'?10:G.wave-1;G.result={kind,reached,done};
+  const reached=kind==='clear'?11:G.wave;const done=kind==='clear'?11:G.wave===10?10:G.wave-1;   // reaching wave 10 always pays the wave-10 rewardG.result={kind,reached,done};
   const best=kind==='clear'?11:G.wave;if(best>P.best){P.best=best;store.set('best',P.best)}
   G.promo=null;if(kind==='clear'){P.clears++;store.set('clears',P.clears);if(P.drank<4){P.drank++;store.set('drank',P.drank);G.promo=DRANKS[P.drank]}}
   showResult();}
@@ -581,7 +581,7 @@ function render(){
   const live=G.phase!=='idle';
   $('dr').textContent=DRANKS[P.drank]+' Mate';$('pips5').innerHTML=DRANKS.map((_,i)=>`<i class="${i<P.drank?'on':i===P.drank?'cur':''}"></i>`).join('');$('wv').textContent=live?'WAVE '+G.wave:'READY';
   $('tm').textContent=fmt(live?G.wt:WAVE_T);
-  $('rew').textContent=rewardFor(G.phase==='over'&&G.result?G.result.done:Math.max(0,G.wave-1)).toLocaleString();
+  $('rew').textContent=rewardFor(G.phase==='over'&&G.result?G.result.done:(G.wave===10?10:Math.max(0,G.wave-1))).toLocaleString();
   $('go').disabled=G.phase==='over'||G.pts<DEPLOY;
   $('gold').disabled=G.phase==='over'||G.sNext||P.earned<GOLD_COST||(G.slots.every(s=>s&&s.rank===5));
   $('goldTxt').textContent='Summon S · 1,000';
