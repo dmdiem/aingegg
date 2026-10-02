@@ -97,6 +97,13 @@ canvas{display:block;width:100%;height:auto}
 .hackbtn{padding:4px 8px}
 .hackbtn.locked{border-color:#3b3375;border-style:solid;color:#5a5480;background:#100d26;cursor:default}
 .hackrow{grid-area:hack;display:flex;gap:6px;align-items:stretch}
+.spdbtn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 8px}
+.spdbtn .spdlbl em{font-style:normal;color:var(--gold);font-size:.85em;letter-spacing:.08em;margin-left:2px}
+.spips{display:flex;gap:3px;width:100%;max-width:90px}
+.spips i{flex:1;height:3px;border-radius:2px;background:#2b2560}
+.spips i.on{background:var(--holo)}
+.spdbtn.max{border-color:var(--gold)}
+.spdbtn.max .spips i.on{background:var(--gold)}
 .hackrow .iconbtn{white-space:nowrap;flex:1;width:100%}
 .hackbtn{font:700 11px var(--body);letter-spacing:.14em;border-radius:9px;padding:5px 8px;cursor:pointer;border:1px dashed #7cff7a;color:#7cff7a;background:#081a0c;font-family:ui-monospace,Menlo,Consolas,monospace}
 .hackbtn[aria-expanded="true"]{background:#7cff7a;color:#081a0c}
@@ -256,7 +263,7 @@ a{color:var(--holo)}
         <div class="wallet"><span>Aing points</span><b id="pts">300</b></div>
         <div class="collect"><div class="bar"><i id="meter"></i></div><button id="collect" disabled>Collect points</button></div>
         <button class="go" id="go"><span id="goMain">Go!</span><small id="goSub">150 pts</small></button>
-        <div class="hackrow"><button class="iconbtn" id="spd" aria-label="Game speed">Speed 1×</button></div>
+        <div class="hackrow"><button class="iconbtn spdbtn" id="spd" aria-label="Game speed 1×, tap to change">Speed 1×</button></div>
         <div class="goldrow"><button class="iconbtn" id="auto" aria-pressed="false">Auto-collect: off</button><button class="golden" id="gold" title="Spend 1,000 eggs so your next Go is a guaranteed S-rank"><span id="goldTxt">Summon S · 1,000</span><img class="eggi" id="goldIcon" alt=""></button></div>
       </div>
       <div class="confirm floating" id="quitBox" role="alertdialog" aria-labelledby="quitTitle" hidden>
@@ -675,7 +682,10 @@ $('wipeNo').onclick=()=>{$('wipeBox').hidden=true};
 $('wipeYes').onclick=()=>{G.sNext=false;hackUnlocked=false;store.set('hackUnlocked',false);renderHackLock();$('hackMenu').hidden=true;P.hacked=false;store.set('hacked',false);P.runs=0;store.set('runs',0);$('wipeBox').hidden=true;P.drank=0;P.clears=0;P.best=0;P.earned=0;$('pop').hidden=true;
   ['drank','clears','best','earned'].forEach(k=>store.set(k,P[k]));fresh();$('result').hidden=true;render()};
 const SPEEDS=[1,1.5,2,3,4,5];
-$('spd').onclick=()=>{speed=SPEEDS[(SPEEDS.indexOf(speed)+1)%SPEEDS.length];$('spd').textContent='Speed '+speed+'×';$('spd').classList.toggle('on',speed>1)};
+function renderSpeed(){const i=SPEEDS.indexOf(speed),max=i===SPEEDS.length-1,b=$('spd');
+  b.innerHTML=`<span class="spdlbl">Speed ${speed}×${max?' <em>MAX</em>':''}</span><span class="spips">${SPEEDS.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join('')}</span>`;
+  b.classList.toggle('on',speed>1);b.classList.toggle('max',max);b.setAttribute('aria-label',`Game speed ${speed}×${max?' (max)':''}, tap to change`)}
+$('spd').onclick=()=>{speed=SPEEDS[(SPEEDS.indexOf(speed)+1)%SPEEDS.length];renderSpeed()};renderSpeed();
 function doRestart(){fresh();$('pop').hidden=true;$('result').hidden=true;render()}
 $('quit').onclick=()=>{if(G.phase==='idle')return;if(G.phase==='over'){doRestart();return}$('wipeBox').hidden=true;$('quitBox').hidden=false;$('quitNo').focus()};
 $('quitNo').onclick=()=>{$('quitBox').hidden=true};
