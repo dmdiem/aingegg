@@ -93,6 +93,7 @@ canvas{display:block;width:100%;height:auto}
 .deploy{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"wallet collect go" "hack gold go";gap:8px 10px;align-items:center}
 .deploy .wallet{grid-area:wallet}.deploy .collect{grid-area:collect}.deploy .go{grid-area:go;align-self:stretch;justify-content:center;width:112px;padding:8px 6px;white-space:nowrap}.goldrow{grid-area:gold;display:flex;gap:6px;align-items:stretch;min-width:0}
 .goldrow .iconbtn{white-space:nowrap}
+.goldrow .iconbtn.on{color:#082024;background:var(--holo);border-color:var(--holo);box-shadow:0 0 10px rgba(94,242,230,.45)}
 .deploy .golden{padding:5px 12px;flex:1;min-width:0}
 .hackbtn{padding:4px 8px}
 .hackbtn.locked{border-color:#3b3375;border-style:solid;color:#5a5480;background:#100d26;cursor:default}
@@ -266,7 +267,7 @@ a{color:var(--holo)}
         <div class="collect"><div class="bar"><i id="meter"></i></div><button id="collect" disabled>Collect points</button></div>
         <button class="go" id="go"><span id="goMain">Go!</span><small id="goSub">150 pts</small></button>
         <div class="hackrow"><button class="iconbtn spdbtn" id="spd" aria-label="Game speed 1×, tap to change">Speed 1×</button></div>
-        <div class="goldrow"><button class="iconbtn" id="auto" aria-pressed="false">Auto-collect: off</button><button class="golden" id="gold" title="Spend 1,000 eggs so your next Go is a guaranteed S-rank"><span id="goldTxt">Summon S · 1,000</span><img class="eggi" id="goldIcon" alt=""></button></div>
+        <div class="goldrow"><button class="iconbtn" id="auto" aria-pressed="false" title="Collect Aing points automatically">Auto-collect</button><button class="iconbtn" id="autoLv" aria-pressed="false" title="Spend points on levels automatically: highest rank first; ties go Red, Yellow, Black">Auto-level</button><button class="golden" id="gold" title="Spend 1,000 eggs so your next Go is a guaranteed S-rank"><span id="goldTxt">Summon S · 1,000</span><img class="eggi" id="goldIcon" alt=""></button></div>
       </div>
       <div class="confirm floating" id="quitBox" role="alertdialog" aria-labelledby="quitTitle" hidden>
           <b id="quitTitle">Restart this run?</b>
@@ -439,7 +440,7 @@ function pickTarget(i){
 const cool=[0,0,0];
 function tick(dt){
   if(G.phase!=='live')return;
-  G.meter=Math.min(300,G.meter+PTS_PER_MIN/60*dt);if(autoCollect&&G.meter>=300){G.meter=0;G.pts+=300}
+  G.meter=Math.min(300,G.meter+PTS_PER_MIN/60*dt);if(autoCollect&&G.meter>=300){G.meter=0;G.pts+=300}autoLevelStep();
   G.wt-=dt;
     if(G.en.length>=CAP){finish('cap');return}
   // fire: each ranger shoots straight up into a shared pool (mobs or bosses)
@@ -654,9 +655,14 @@ function renderRank(){}
 let wipeArm=false;
 function renderMeter(){$('meter').style.width=(G.meter/300*100)+'%';const full=G.meter>=300;$('collect').disabled=!full||G.phase!=='live';$('collect').textContent=full?'Collect 300':'Collectaing… '+fmt((300-G.meter)/(PTS_PER_MIN/60))}
 $('collect').onclick=()=>{if(!paused&&G.meter>=300){G.meter=0;G.pts+=300;render()}};
-let autoCollect=store.get('auto',false);
-function renderAuto(){const b=$('auto');b.textContent='Auto-collect: '+(autoCollect?'on':'off');b.classList.toggle('on',autoCollect);b.setAttribute('aria-pressed',autoCollect)}
-$('auto').onclick=()=>{autoCollect=!autoCollect;store.set('auto',autoCollect);renderAuto()};renderAuto();
+let autoCollect=store.get('auto',false),autoLevel=store.get('autoLv',false);
+function renderAuto(){for(const [id,on] of [['auto',autoCollect],['autoLv',autoLevel]]){const b=$(id);b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}}
+$('auto').onclick=()=>{autoCollect=!autoCollect;store.set('auto',autoCollect);renderAuto()};
+$('autoLv').onclick=()=>{autoLevel=!autoLevel;store.set('autoLv',autoLevel);renderAuto();if(autoLevel)autoLevelStep()};renderAuto();
+// Auto-level: highest rank first until max; same rank goes Red, then Yellow, then Black.
+function autoLevelStep(){if(!autoLevel||paused||G.phase!=='live')return;
+  for(let guard=0;guard<40;guard++){const order=[0,2,1].filter(i=>G.slots[i]&&G.slots[i].lv.length<10).sort((a,b)=>G.slots[b].rank-G.slots[a].rank);
+    if(!order.length)return;const i=order[0],sl=G.slots[i];if(G.pts<lvCost(sl))return;G.pts-=lvCost(sl);sl.lv.push(sl.rank);sl.pop=.4}}
 $('go').onclick=deploy;
 $('pauseBtn').onclick=()=>setPaused(!paused);
 /* ---------- just-for-fun cheats ---------- */
@@ -686,7 +692,7 @@ $('wipeYes').onclick=()=>{G.sNext=false;hackUnlocked=false;store.set('hackUnlock
   ['drank','clears','best','earned'].forEach(k=>store.set(k,P[k]));fresh();$('result').hidden=true;render()};
 const SPEEDS=[1,1.5,2,3,4,5];
 function renderSpeed(){const i=SPEEDS.indexOf(speed),max=i===SPEEDS.length-1,b=$('spd');
-  b.innerHTML=`<span class="spdlbl">Speed ${speed}×${max?' <em>MAX</em>':''}</span><span class="spips">${SPEEDS.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join('')}</span>`;
+  b.innerHTML=`<span class="spdlbl">Speed ${speed}×</span><span class="spips">${SPEEDS.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join('')}</span>`;
   b.classList.toggle('on',speed>1);b.classList.toggle('max',max);b.setAttribute('aria-label',`Game speed ${speed}×${max?' (max)':''}, tap to change`)}
 $('spd').onclick=()=>{speed=SPEEDS[(SPEEDS.indexOf(speed)+1)%SPEEDS.length];renderSpeed()};renderSpeed();
 function doRestart(){fresh();$('pop').hidden=true;$('result').hidden=true;render()}
