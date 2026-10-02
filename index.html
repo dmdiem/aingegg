@@ -31,9 +31,15 @@ body{font-family:var(--body);font-size:15px;padding:0 16px}
 .console{background:linear-gradient(180deg,var(--hull-2),var(--hull));border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:10px;position:relative;
   box-shadow:0 0 0 4px #120e2c,0 18px 40px rgba(0,0,0,.4)}
 .hdr{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:stretch}
-.wavebox{background:#0f0c28;border:1px solid var(--line);border-radius:12px;padding:6px 12px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.wavebox{background:#0f0c28;border:1px solid var(--line);border-radius:12px;padding:6px 12px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
+.wavebox .wrow{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.wavebox .rrow{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:5px;flex-wrap:wrap}
+.pips5{display:flex;gap:4px}
+.pips5 i{width:16px;height:6px;border-radius:3px;background:#2b2560}
+.pips5 i.on{background:var(--gold)}
+.pips5 i.cur{background:var(--gold);box-shadow:0 0 6px var(--gold)}
 .wavebox .wv{font-family:var(--display);font-size:20px;color:var(--holo);letter-spacing:.03em}
-.wavebox .dr{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);margin-left:auto}
+.wavebox .dr{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--gold)}
 .wavebox .tm{font-family:var(--display);font-size:28px;font-variant-numeric:tabular-nums;color:var(--ink)}
 .rewardbox{background:#0f0c28;border:1px solid var(--line);border-radius:12px;padding:6px 10px;text-align:right;min-width:92px}
 .rewardbox{display:flex;flex-direction:column;justify-content:space-between;gap:4px;padding:5px 10px}
@@ -195,7 +201,7 @@ a{color:var(--holo)}
   <div class="layout">
     <div class="console" id="console">
       <div class="hdr">
-        <div class="wavebox"><span class="wv" id="wv">READY</span><span class="tm" id="tm">01:30</span><span class="dr" id="dr"></span></div>
+        <div class="wavebox"><div class="rrow"><span class="dr" id="dr"></span><span class="pips5" id="pips5"></span></div><div class="wrow"><span class="wv" id="wv">READY</span><span class="tm" id="tm">01:30</span></div></div>
         <div class="rewardbox">
           <div class="rewhalf"><span>This run</span><b><span id="rew">0</span><img class="eggi" id="rewIcon" alt=""></b></div>
           <div class="rewhalf"><span>Stash</span><b><span id="stash">0</span><img class="eggi" id="stashIcon" alt=""></b></div>
@@ -573,7 +579,7 @@ function rewardFor(done){return done<=0?0:EGGS[Math.min(10,done-1)]}   // done =
 function render(){
   $('pts').textContent=Math.floor(G.pts);
   const live=G.phase!=='idle';
-  $('dr').textContent=DRANKS[P.drank]+' Mate';$('wv').textContent=live?'WAVE '+G.wave:'READY';
+  $('dr').textContent=DRANKS[P.drank]+' Mate';$('pips5').innerHTML=DRANKS.map((_,i)=>`<i class="${i<P.drank?'on':i===P.drank?'cur':''}"></i>`).join('');$('wv').textContent=live?'WAVE '+G.wave:'READY';
   $('tm').textContent=fmt(live?G.wt:WAVE_T);
   $('rew').textContent=rewardFor(G.phase==='over'&&G.result?G.result.done:Math.max(0,G.wave-1)).toLocaleString();
   $('go').disabled=G.phase==='over'||G.pts<DEPLOY;
@@ -597,7 +603,7 @@ function renderRank(){
   $('ladder').innerHTML=DRANKS.map((n,i)=>`<div class="${i===P.drank?'cur':i<P.drank?'done':''}">${n}</div>`).join('');
   $('rankNote').textContent=P.drank<4?`Clear all 10 waves to reach ${DRANKS[P.drank+1]} Mate. All clears so far: ${P.clears}.`:`Master Mate. Best odds unlocked. All clears: ${P.clears}.`}
 let wipeArm=false;
-function renderMeter(){$('meter').style.width=(G.meter/300*100)+'%';const full=G.meter>=300;$('collect').disabled=!full||G.phase!=='live';$('collect').textContent=full?'Collect 300':'Collectaing… '+Math.floor(G.meter)}
+function renderMeter(){$('meter').style.width=(G.meter/300*100)+'%';const full=G.meter>=300;$('collect').disabled=!full||G.phase!=='live';$('collect').textContent=full?'Collect 300':'Collectaing… '+fmt((300-G.meter)/(PTS_PER_MIN/60))}
 $('collect').onclick=()=>{if(G.meter>=300){G.meter=0;G.pts+=300;render()}};
 let autoCollect=store.get('auto',false);
 function renderAuto(){const b=$('auto');b.textContent='Auto-collect: '+(autoCollect?'on':'off');b.classList.toggle('on',autoCollect);b.setAttribute('aria-pressed',autoCollect)}
