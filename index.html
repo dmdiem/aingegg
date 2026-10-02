@@ -142,6 +142,8 @@ button:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
 .winbox input:focus{outline:2px solid var(--holo)}
 .winbox img{width:100%;max-width:480px;border-radius:12px;border:1px solid var(--gold);box-shadow:0 0 24px rgba(255,201,74,.3)}
 .result{position:absolute;inset:0;background:rgba(9,7,24,.88);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center}
+.result .resdeps{background:var(--hull-2);border:1px solid var(--line);border-radius:999px;padding:5px 14px;font-size:14px;color:var(--muted);letter-spacing:.04em}
+.result .resdeps b{color:var(--holo);font-family:var(--display);font-weight:400;font-size:17px;margin-right:4px}
 .result .quip{margin:-4px 0 0;font-size:17px;font-weight:700;color:var(--ink);letter-spacing:.02em}
 .result h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,7vw,44px);margin:0;line-height:1}
 .result .sq{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
@@ -297,6 +299,7 @@ a{color:var(--holo)}
         <p class="quip" id="resQuip"></p>
         <div class="sq" id="resSquad"></div>
         <div><div class="amt"><img class="eggi" id="resIcon" alt=""><span id="resAmt">500</span></div><div class="note" id="resItem"></div></div>
+        <div class="resdeps" id="resDeps"></div>
         <div class="row"><button class="btn win" id="winBtn" hidden>Make win card</button><button class="btn pri" id="again">Play again</button></div>
         <p class="note" id="promo" style="color:var(--rS);font-weight:700" hidden></p>
         <p class="note" id="claimNote"></p>
@@ -348,11 +351,11 @@ const RANKS=['E','D','C','B','A','S'];
 const RCOL=['#9196ad','#6fb7ff','#3fd8e8','#ff7fd0','#ffb347','#7be38b'];
 const DRANKS=['Junior','Senior','Veteran','Elite','Master'];
 const ODDS_BY=[[30,26,22,14,6,2],[26,25,22,15,8,4],[22,23,22,17,10,6],[18,21,22,19,12,8],[14,19,22,20,15,10]]; // % per deploy, E..S
-const RBASE=[12,16,22,36,65,115];         // base damage/sec by rank
-const LVF=.6;                            // each level adds 60% of the base of the rank it was bought at
+const RBASE=[12,16,22,44,60,92];         // base damage/sec by rank
+const LVF=.75;                            // each level adds 75% of the base of the rank it was bought at
 const DEPLOY=150, START_PTS=300, PTS_PER_MIN=300, WAVE_T=90, SPAWN_T=80, CAP=50;
 const WAVE_TS=[90,60,60,60,60,60,60,60,60,60];   // seconds per wave: 1:30 for wave 1, then 1:00 (matches the original's ~10.5 min run)
-const REQ=[13.5,33.75,75,150,270,191.4,246,302.4,369.6,345];   // mob HP pool per wave = REQ × 90 (tuned to the community clear sheet + deploy limits)
+const REQ=[13.5,33.75,75,150,252,255.2,262.4,302.4,369.6,368];   // mob HP pool per wave = REQ × 90 (tuned to the community clear sheet + deploy limits)
 const BOSSES=[[],[],[3450],[4830],[6900],[5520,5520],[6900,6900],[8280,8280],[6900,6900,8280],[6210,6210,11040]];   // boss HP per wave
 const BAYS=[
   {name:'Red',col:'#ff5b5b',trim:'#ffd0d0',norm:2,boss:1,role:'2× damage to normal enemies'},
@@ -702,7 +705,7 @@ function showResult(){const r=G.result;
   $('resTitle').style.color=r.kind==='clear'?'var(--rS)':r.kind==='w10'?'var(--gold)':'var(--danger)';
   $('resSquad').innerHTML=G.slots.map((s,i)=>`<div class="rc"><span class="rank" style="color:${s?RCOL[s.rank]:'var(--muted)'}">${s?RANKS[s.rank]:'–'}</span><canvas id="rp${i}" width="100" height="90"></canvas><div class="vbar${s&&s.lv.length>=10?' max':''}" style="top:8px;bottom:26px;right:5px">${Array.from({length:10},(_,k)=>s&&k<s.lv.length?`<i class="on" style="background:${RCOL[s.lv[k]]};color:${RCOL[s.lv[k]]}"></i>`:'<i></i>').join('')}</div><div class="lv">${s?'▲ '+s.lv.length:'Empty'}</div></div>`).join('');
   G.slots.forEach((s,i)=>{if(s){const c=$('rp'+i).getContext('2d');drawMascot(c,i,s.rank,0,0,mascotFor(s.rank))}});
-  const amt=rewardFor(r.done);$('resAmt').textContent=amt.toLocaleString();$('resItem').textContent='eggs · '+G.deploys+' deploys';
+  const amt=rewardFor(r.done);$('resAmt').textContent=amt.toLocaleString();$('resItem').textContent='eggs';$('resDeps').innerHTML=`<b>${G.deploys}</b> deploy${G.deploys===1?'':'s'}`;
   const pr=$('promo');pr.hidden=!G.promo;if(G.promo)pr.textContent=`Promoted to ${G.promo} Mate! Better deploy odds from your next run.`;
   const amt2=rewardFor(r.done);P.earned+=amt2;store.set('earned',P.earned);
   $('claimNote').textContent='+'+amt2.toLocaleString()+' eggs added to your stash ('+P.earned.toLocaleString()+' total).'+(G.won&&P.hacked?' *with hacks.':'');
