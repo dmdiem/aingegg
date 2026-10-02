@@ -32,7 +32,10 @@ body{font-family:var(--body);font-size:15px;padding:0 16px}
   box-shadow:0 0 0 4px #120e2c,0 18px 40px rgba(0,0,0,.4)}
 .hdr{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:stretch}
 .wavebox{background:#0f0c28;border:1px solid var(--line);border-radius:12px;padding:6px 12px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
-.wavebox .wrow{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.wavebox .wrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.pausebtn{margin-left:auto;font:700 12px var(--body);letter-spacing:.08em;text-transform:uppercase;border-radius:8px;padding:5px 10px;cursor:pointer;background:#120f30;border:1px solid var(--line);color:var(--ink)}
+.pausebtn[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#1b1640}
+.pausebtn:disabled{opacity:.4;cursor:not-allowed}
 .wavebox .rrow{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:5px;flex-wrap:wrap}
 .pips5{display:flex;gap:4px}
 .pips5 i{width:16px;height:6px;border-radius:3px;background:#2b2560}
@@ -201,7 +204,7 @@ a{color:var(--holo)}
   <div class="layout">
     <div class="console" id="console">
       <div class="hdr">
-        <div class="wavebox"><div class="rrow"><span class="dr" id="dr"></span><span class="pips5" id="pips5"></span></div><div class="wrow"><span class="wv" id="wv">READY</span><span class="tm" id="tm">01:30</span></div></div>
+        <div class="wavebox"><div class="rrow"><span class="dr" id="dr"></span><span class="pips5" id="pips5"></span></div><div class="wrow"><span class="wv" id="wv">READY</span><span class="tm" id="tm">01:30</span><button class="pausebtn" id="pauseBtn" aria-pressed="false" disabled>Pause</button></div></div>
         <div class="rewardbox">
           <div class="rewhalf"><span>This run</span><b><span id="rew">0</span><img class="eggi" id="rewIcon" alt=""></b></div>
           <div class="rewhalf"><span>Stash</span><b><span id="stash">0</span><img class="eggi" id="stashIcon" alt=""></b></div>
@@ -297,6 +300,9 @@ a{color:var(--holo)}
 
 <script>
 (()=>{
+if(!CanvasRenderingContext2D.prototype.roundRect){CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){r=Math.min(typeof r==='number'?r:(r&&r[0])||0,Math.abs(w)/2,Math.abs(h)/2);
+  this.moveTo(x+r,y);this.lineTo(x+w-r,y);this.quadraticCurveTo(x+w,y,x+w,y+r);this.lineTo(x+w,y+h-r);this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  this.lineTo(x+r,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r);this.lineTo(x,y+r);this.quadraticCurveTo(x,y,x+r,y);this.closePath();return this}}
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem('ss2_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
              set(k,v){try{localStorage.setItem('ss2_'+k,JSON.stringify(v))}catch(e){}}};
@@ -330,8 +336,8 @@ function dayKey(){return new Date().toISOString().slice(0,10)}
 function claimState(){if(P.claims.week!==weekKey())P.claims={week:weekKey(),count:0,day:''};return P.claims}
 
 /* ---------- run state ---------- */
-let G=null;
-function fresh(){if(G&&G.sNext){P.earned+=GOLD_COST;store.set('earned',P.earned)}G={phase:'idle',slots:[null,null,null],deploys:0,pts:START_PTS,meter:0,wave:0,wt:WAVE_T,q:[],spawnT:0,iv:1,en:[],shots:[],fx:[],log:[],result:null,claimed:false};}
+let G=null,paused=false;
+function fresh(){if(paused){paused=false;const b=document.getElementById('pauseBtn');if(b){b.setAttribute('aria-pressed','false');b.textContent='Pause'}}if(G&&G.sNext){P.earned+=GOLD_COST;store.set('earned',P.earned)}G={phase:'idle',slots:[null,null,null],deploys:0,pts:START_PTS,meter:0,wave:0,wt:WAVE_T,q:[],spawnT:0,iv:1,en:[],shots:[],fx:[],log:[],result:null,claimed:false};}
 fresh();
 let speed=1;
 
@@ -339,7 +345,8 @@ const slotDps=s=>s?RBASE[s.rank]+s.lv.reduce((a,r)=>a+RBASE[r]*LVF,0):0;
 const lvCost=s=>100+5*s.lv.length;
 function rollRank(){const O=ODDS_BY[P.drank];let t=Math.random()*100;for(let i=0;i<6;i++){t-=O[i];if(t<0)return i}return 0}
 
-function deploy(){
+function setPaused(v){paused=!!v&&G.phase==='live';const b=$('pauseBtn');b.setAttribute('aria-pressed',paused);b.textContent=paused?'Resume':'Pause';render()}
+function deploy(){if(paused)return;
   if(G.phase==='over'||G.pts<DEPLOY)return;
   G.pts-=DEPLOY;G.deploys++;const r=G.sNext?5:rollRank();G.sNext=false;let msg;
   const empty=[0,1,2].find(i=>!G.slots[i]);
@@ -354,18 +361,22 @@ function deploy(){
   render();
 }
 const GOLD_COST=1000;
-function goldHatch(){
+function goldHatch(){if(paused)return;
   if(G.phase==='over'||G.sNext||P.earned<GOLD_COST)return;
   P.earned-=GOLD_COST;store.set('earned',P.earned);G.sNext=true;
   popup('good','S-rank guaranteed!','Your next <b style="display:inline;font:inherit;color:var(--gold)">Go</b> will summon an <span style="color:'+RCOL[5]+'">S</span>-rank.');
   render();
 }
 const GREETS=['hey {m}','heeeeey {m}','hey {m}...','oh hey {m}','heyyy {m}','hey hey {m}','ohi','ohey','hey {m} :)','sup {m}'];
-function greet(i){const others=G.slots.some((o,k)=>o&&k!==i);let g=GREETS[Math.floor(Math.random()*GREETS.length)];
+let greetBag=[],lastGreet=null;
+function nextGreet(){if(!greetBag.length){greetBag=GREETS.slice();for(let k=greetBag.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[greetBag[k],greetBag[j]]=[greetBag[j],greetBag[k]]}
+    if(greetBag[greetBag.length-1]===lastGreet)greetBag.unshift(greetBag.pop())}
+  lastGreet=greetBag.pop();return lastGreet}
+function greet(i){const others=G.slots.some((o,k)=>o&&k!==i);let g=nextGreet();
   if(g==='heeeeey {m}')g='h'+'e'.repeat(2+Math.floor(Math.random()*6))+'y {m}';
   G.slots[i].say={txt:g.replace('{m}',others?'mats':'mat'),l:2.4}}
 function popup(kind,title,html){const p=$('pop');p.className='pop '+kind;p.innerHTML=`<b>${title}</b>${html}`;p.hidden=false;clearTimeout(p._t);p._t=setTimeout(()=>p.hidden=true,2200)}
-function levelUp(i){const s=G.slots[i];if(!s||G.phase==='over'||s.lv.length>=10||G.pts<lvCost(s))return;
+function levelUp(i){if(paused)return;const s=G.slots[i];if(!s||G.phase==='over'||s.lv.length>=10||G.pts<lvCost(s))return;
   G.pts-=lvCost(s);s.lv.push(s.rank);s.pop=.4;render()}
 function startWave(w){G.wave=w;G.wt=WAVE_T;const sp={c:10+2*w,req:REQ[w-1],bosses:BOSSES[w-1]},c=sp.c,hp=sp.req*WAVE_T/c;const q=[];
   for(let i=0;i<c;i++)q.push({boss:false,hp});
@@ -374,7 +385,7 @@ function startWave(w){G.wave=w;G.wt=WAVE_T;const sp={c:10+2*w,req:REQ[w-1],bosse
   if(w>1)G.fx.push({banner:'WAVE '+w,sub:sp.bosses.length?sp.bosses.length+(sp.bosses.length>1?' bosses':' boss')+' incoming':'',l:1.8});}
 function finish(kind){
   G.phase='over';P.runs=(P.runs||0)+1;store.set('runs',P.runs);G.won=kind==='clear'&&P.drank===4;
-  const reached=kind==='clear'?11:G.wave;const done=kind==='clear'?11:G.wave===10?10:G.wave-1;   // reaching wave 10 always pays the wave-10 rewardG.result={kind,reached,done};
+  const reached=kind==='clear'?11:G.wave;const done=kind==='clear'?11:G.wave===10?10:G.wave-1;G.result={kind,reached,done};   // reaching wave 10 always pays the wave-10 reward
   const best=kind==='clear'?11:G.wave;if(best>P.best){P.best=best;store.set('best',P.best)}
   G.promo=null;if(kind==='clear'){P.clears++;store.set('clears',P.clears);if(P.drank<4){P.drank++;store.set('drank',P.drank);G.promo=DRANKS[P.drank]}}
   showResult();}
@@ -541,8 +552,8 @@ function draw(t,dt){
   for(const s of G.shots){const c=BAYS[s.i],lv=s.lv||0,col=s.i===1?'#ffc94a':c.col;
     const w=3+lv*.5,len=24+lv*2.4,a=Math.min(1,s.l*4);cx.globalAlpha=a;cx.lineCap='round';
     const xs=lv>=5?[-6,6]:[0];
-    for(const ox of xs){cx.shadowColor=col;cx.shadowBlur=8+lv*1.6;cx.strokeStyle=col;cx.lineWidth=w;
-      cx.beginPath();cx.moveTo(s.x+ox,s.y);cx.lineTo(s.x+ox,s.y+len);cx.stroke();
+    for(const ox of xs){cx.strokeStyle=col;cx.globalAlpha=a*.28;cx.lineWidth=w+6+lv*.8;cx.beginPath();cx.moveTo(s.x+ox,s.y);cx.lineTo(s.x+ox,s.y+len);cx.stroke();
+      cx.globalAlpha=a;cx.lineWidth=w;cx.beginPath();cx.moveTo(s.x+ox,s.y);cx.lineTo(s.x+ox,s.y+len);cx.stroke();
       if(lv>=8){cx.shadowBlur=0;cx.strokeStyle='#fff';cx.lineWidth=w*.4;cx.beginPath();cx.moveTo(s.x+ox,s.y+2);cx.lineTo(s.x+ox,s.y+len*.7);cx.stroke()}
       if(lv>=10){cx.shadowBlur=0;cx.fillStyle='rgba(255,240,180,.9)';for(let k=0;k<3;k++){cx.beginPath();cx.arc(s.x+ox+Math.sin((s.y+k*13)*.2)*4,s.y+len+6+k*7,1.6-k*.4,0,7);cx.fill()}}}
     cx.shadowBlur=0;cx.globalAlpha=1;cx.lineCap='butt'}
@@ -559,6 +570,8 @@ function draw(t,dt){
   cx.fillStyle='#4fa8ff';cx.beginPath();cx.roundRect(18,16,14,13,3);cx.fill();
   cx.font='15px Bungee, sans-serif';cx.textAlign='left';cx.fillStyle=danger?'#fff':'#5ef2e6';cx.fillText(n+'/50',38,29);
   const mobHp=G.en.filter(e=>!e.boss).reduce((a,e)=>a+e.hp,0),bossHp=G.en.filter(e=>e.boss).reduce((a,e)=>a+e.hp,0);
+  if(paused&&G.phase==='live'){cx.fillStyle='rgba(7,10,26,.72)';cx.fillRect(0,0,W,H);cx.textAlign='center';cx.font='34px Bungee, sans-serif';cx.fillStyle='#ffc94a';cx.fillText('PAUSED',W/2,H/2);
+    cx.font='600 14px "Chakra Petch",sans-serif';cx.fillStyle='#eeeaff';cx.fillText('Press Resume (or P) to keep going',W/2,H/2+24)}
   if(G.phase==='idle'){cx.fillStyle='rgba(7,26,34,.7)';cx.fillRect(0,0,W,H);cx.textAlign='center';cx.font='22px Bungee, sans-serif';cx.fillStyle='#ffc94a';
     cx.fillText('PRESS GO TO DEPLOY',W/2,H/2-6);cx.font='600 14px "Chakra Petch",sans-serif';cx.fillStyle='#eeeaff';cx.fillText('Waves start the moment your first sidekick lands.',W/2,H/2+18)}
 }
@@ -582,7 +595,7 @@ function render(){
   $('dr').textContent=DRANKS[P.drank]+' Mate';$('pips5').innerHTML=DRANKS.map((_,i)=>`<i class="${i<P.drank?'on':i===P.drank?'cur':''}"></i>`).join('');$('wv').textContent=live?'WAVE '+G.wave:'READY';
   $('tm').textContent=fmt(live?G.wt:WAVE_T);
   $('rew').textContent=rewardFor(G.phase==='over'&&G.result?G.result.done:(G.wave===10?10:Math.max(0,G.wave-1))).toLocaleString();
-  $('go').disabled=G.phase==='over'||G.pts<DEPLOY;
+  $('go').disabled=paused||G.phase==='over'||G.pts<DEPLOY;$('pauseBtn').disabled=G.phase!=='live';
   $('gold').disabled=G.phase==='over'||G.sNext||P.earned<GOLD_COST||(G.slots.every(s=>s&&s.rank===5));
   $('goldTxt').textContent='Summon S · 1,000';
   $('go').classList.toggle('armed',!!G.sNext);$('goSub').textContent=G.sNext?'S · 150 pts':'150 pts';$('goMain').textContent=G.sNext?'Go! S':'Go!';
@@ -594,7 +607,7 @@ function render(){
     else{b.disabled=G.pts<lvCost(s)||G.phase==='over';b.textContent='Level up · '+lvCost(s)}}
   $('sDep').textContent=G.deploys;$('sEn').textContent=G.en.length+'/50';$('sEn').style.color=G.en.length>=40?'var(--danger)':'';
   $('sBest').textContent=P.best>=11?'Clear':P.best;
-  const log=$('log');if(G.log.length){log.innerHTML=G.log.slice(0,30).map(e=>`<li><span class="n"${e.r==null?' style="color:#7cff7a;font-size:10px"':''}>${typeof e.n==='number'?'#'+e.n:e.n}</span><span class="r" style="color:${e.r==null?'#7cff7a':RCOL[e.r]}">${e.r==null?'⚡':RANKS[e.r]}</span><span class="w">${e.msg}</span></li>`).join('')}
+  const log=$('log');const lk=G.log.length+'|'+(G.log[0]?G.log[0].msg:'');if(log._k===lk){}else if((log._k=lk)&&G.log.length){log.innerHTML=G.log.slice(0,30).map(e=>`<li><span class="n"${e.r==null?' style="color:#7cff7a;font-size:10px"':''}>${typeof e.n==='number'?'#'+e.n:e.n}</span><span class="r" style="color:${e.r==null?'#7cff7a':RCOL[e.r]}">${e.r==null?'⚡':RANKS[e.r]}</span><span class="w">${e.msg}</span></li>`).join('')}
   else log.innerHTML='<li><span class="n">—</span><span></span><span class="w">Press Go to deploy your first sidekick. The run starts immediately.</span></li>';
   $('field').classList.toggle('warn',G.en.length>=40&&G.phase==='live');
   renderBoosts();renderRank();
@@ -604,11 +617,12 @@ function renderRank(){
   $('rankNote').textContent=P.drank<4?`Clear all 10 waves to reach ${DRANKS[P.drank+1]} Mate. All clears so far: ${P.clears}.`:`Master Mate. Best odds unlocked. All clears: ${P.clears}.`}
 let wipeArm=false;
 function renderMeter(){$('meter').style.width=(G.meter/300*100)+'%';const full=G.meter>=300;$('collect').disabled=!full||G.phase!=='live';$('collect').textContent=full?'Collect 300':'Collectaing… '+fmt((300-G.meter)/(PTS_PER_MIN/60))}
-$('collect').onclick=()=>{if(G.meter>=300){G.meter=0;G.pts+=300;render()}};
+$('collect').onclick=()=>{if(!paused&&G.meter>=300){G.meter=0;G.pts+=300;render()}};
 let autoCollect=store.get('auto',false);
 function renderAuto(){const b=$('auto');b.textContent='Auto-collect: '+(autoCollect?'on':'off');b.classList.toggle('on',autoCollect);b.setAttribute('aria-pressed',autoCollect)}
 $('auto').onclick=()=>{autoCollect=!autoCollect;store.set('auto',autoCollect);renderAuto()};renderAuto();
 $('go').onclick=deploy;
+$('pauseBtn').onclick=()=>setPaused(!paused);
 /* ---------- just-for-fun cheats ---------- */
 function hackLog(msg){P.hacked=true;store.set('hacked',true);G.log.unshift({n:'HACK',r:null,msg})}
 function cheatEggs(n){hackLog(`Injected +${n.toLocaleString()} eggs`);P.earned+=n;store.set('earned',P.earned);popup('good','Egg injection',`+${n.toLocaleString()} eggs added to your stash.`);render()}
@@ -640,7 +654,7 @@ function doRestart(){fresh();$('pop').hidden=true;$('result').hidden=true;render
 $('quit').onclick=()=>{if(G.phase==='idle')return;if(G.phase==='over'){doRestart();return}$('wipeBox').hidden=true;$('quitBox').hidden=false;$('quitNo').focus()};
 $('quitNo').onclick=()=>{$('quitBox').hidden=true};
 $('quitYes').onclick=()=>{$('quitBox').hidden=true;doRestart()};
-addEventListener('keydown',e=>{if(e.target.tagName==='BUTTON'&&(e.key===' '||e.key==='Enter'))return;
+addEventListener('keydown',e=>{if(e.target.tagName==='BUTTON'&&(e.key===' '||e.key==='Enter'))return;if(e.key==='p'||e.key==='P'){setPaused(!paused);return}
   if(e.key==='g'||e.key==='G')deploy();if(e.key==='1'||e.key==='2'||e.key==='3')levelUp(+e.key-1);if(e.key==='c'||e.key==='C')$('collect').click()});
 
 function renderBoosts(){$('stash').textContent=P.earned.toLocaleString()}
@@ -693,14 +707,19 @@ $('winCopy').onclick=async()=>{try{const blob=await new Promise(r=>winCanvas.toB
 $('again').onclick=()=>{fresh();$('pop').hidden=true;$('result').hidden=true;render()};
 
 /* ---------- loop ---------- */
-let last=performance.now(),acc=0;
-function loop(now){const real=Math.min(.05,(now-last)/1000);last=now;const t=now/1000;
-  const dt=real*speed;const paused=!$('quitBox').hidden||!$('wipeBox').hidden;const steps=Math.ceil(speed);if(!paused)for(let k=0;k<steps;k++)tick(dt/steps);
-  for(const s of G.slots){if(s&&s.pop>0)s.pop=Math.max(0,s.pop-real*2);if(s&&s.say)s.say.l-=real}
-  draw(t,real);for(let i=0;i<3;i++)drawPortrait(i,t);
-  acc+=real;if(acc>.15){acc=0;render()}
-  renderMeter();
+let last=performance.now(),acc=0,portT=1;
+function simulate(seconds){if(paused||!$('quitBox').hidden||!$('wipeBox').hidden)return;
+  let left=Math.min(seconds,7200)*speed,n=0;while(left>1e-6&&G.phase==='live'&&n<200000){const d=Math.min(.05,left);tick(d);left-=d;n++}}
+function loop(now){let real=Math.max(0,(now-last)/1000);last=now;const t=now/1000;
+  try{simulate(Math.min(real,.1));const fr=Math.min(.05,real);
+    for(const s of G.slots){if(s&&s.pop>0)s.pop=Math.max(0,s.pop-fr*2);if(s&&s.say)s.say.l-=fr}
+    draw(t,fr);portT+=real;if(portT>.066){portT=0;for(let i=0;i<3;i++)drawPortrait(i,t)}
+    if(G.fx.length>350)G.fx.splice(0,G.fx.length-350);
+    acc+=real;if(acc>.15){acc=0;render()}
+    renderMeter();}
+  catch(e){console.error('Aingegg Sidekick:',e)}
   requestAnimationFrame(loop)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.phase==='live')setPaused(true)});
 const EGG_ICON=(()=>{const k=document.createElement('canvas');k.width=k.height=64;const c=k.getContext('2d');
   const g=c.createRadialGradient(24,20,3,32,34,30);g.addColorStop(0,'#fffaf0');g.addColorStop(.6,'#f6dcc0');g.addColorStop(1,'#d9a985');
   c.fillStyle=g;eggPath(c,32,33,40,54);c.fill();c.strokeStyle='rgba(120,70,40,.35)';c.lineWidth=1.5;c.stroke();
