@@ -80,6 +80,20 @@ canvas{display:block;width:100%;height:auto}
 .pop.bad{border-color:var(--danger)} .pop.bad b{color:var(--danger)}
 .pop.good{border-color:var(--rS)}
 .pop.pink{border-color:#ff6fb8;background:linear-gradient(160deg,rgba(70,14,52,.96),rgba(30,10,40,.96));box-shadow:0 0 0 3px rgba(255,111,184,.35),0 0 34px rgba(255,111,184,.55);animation:pinkpop .5s cubic-bezier(.2,1.6,.4,1)}
+.eggcol{margin-top:16px}
+.eggcol h3 span{font-size:13px;color:var(--muted);margin-left:6px}
+.eggset{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.eggset div{position:relative;aspect-ratio:1;border-radius:10px;background:#141a2b;border:1px solid #2c3550;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.eggset div.got{border-color:#ffd166;box-shadow:0 0 8px rgba(255,209,102,.3)}
+.eggset img{width:84%;height:84%;object-fit:contain}
+.eggset div:not(.got) img{filter:brightness(0);opacity:.85}
+.eggset div:not(.got)::after{content:'?';position:absolute;font:700 16px var(--body);color:#9aa6c4}
+.eggset b{position:absolute;z-index:1;left:3px;top:3px;background:rgba(8,10,20,.75);border-radius:5px;padding:1px 4px;line-height:1.2;font:400 11px Bungee,sans-serif;color:#ffd166}
+.eggset div.pk{background:#2a0c1f;border-color:#5a2346}
+.eggset div.pk.got{border-color:#ff8fc8;box-shadow:0 0 8px rgba(255,111,184,.35)}
+.eggset div.pk b{color:#ff9fd2;background:rgba(20,6,16,.75)}
+.eggset div.pk:not(.got)::after{color:#ff9fd2}
+.eggcol.full h3::after{content:' ✦ Full set! ✦';color:var(--gold);font-size:13px}
 .pinkcol{margin-top:16px}
 .pinkcol h3{color:#ff9fd2!important}
 .pinkcol h3 span{font-size:13px;color:var(--muted);margin-left:6px}
@@ -197,14 +211,22 @@ button:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
 .note{color:var(--muted);font-size:13px;margin:0}
 
 .side{display:flex;flex-direction:column;gap:12px;min-width:0}
+@media (min-width:881px){   /* right column matches the game's height */
+  .side{align-self:stretch;height:0;min-height:100%}
+  .side>.panel:first-child{flex:1;min-height:0;display:flex;flex-direction:column}   /* deploy log takes whatever height is left and scrolls */
+  .side>.panel:first-child .log{height:auto;flex:1;min-height:90px}
+}
+.side .panel::-webkit-scrollbar,.log::-webkit-scrollbar{width:8px}
+.side .panel::-webkit-scrollbar-thumb,.log::-webkit-scrollbar-thumb{background:#3b3375;border-radius:8px}
+.side .panel,.log{scrollbar-width:thin;scrollbar-color:#3b3375 transparent}
 .panel{background:var(--hull);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
 .panel h3{font-family:var(--display);font-weight:400;font-size:15px;color:var(--holo);margin:0 0 10px;letter-spacing:.04em}
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .stats div{background:#120f30;border-radius:10px;padding:6px 10px}
 .stats span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
 .stats b{font-family:var(--display);font-weight:400;font-size:18px;font-variant-numeric:tabular-nums}
-.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:220px;overflow:auto;font-size:13px}
-.log li{display:grid;grid-template-columns:2.2em 1.6em 1fr;gap:6px;align-items:baseline;padding:3px 0;border-bottom:1px solid rgba(59,51,117,.6)}
+.log{list-style:none;margin:0;padding:0 4px 0 0;display:flex;flex-direction:column;gap:4px;height:220px;overflow-y:auto;overscroll-behavior:contain;font-size:13px}   /* fixed height so new entries never shift the page */
+.log li{flex-shrink:0;display:grid;grid-template-columns:2.2em 1.6em 1fr;gap:6px;align-items:baseline;padding:3px 0;border-bottom:1px solid rgba(59,51,117,.6)}
 .log .n{color:var(--muted);font-variant-numeric:tabular-nums}
 .log .r{font-family:var(--display)}
 .log .w{color:var(--muted)}
@@ -389,7 +411,7 @@ a{color:var(--holo)}
         </ul>
         <h3 style="margin-top:16px">Deploy rates</h3>
         <div class="tablewrap"><table class="odds" id="oddsTbl"></table></div>
-        <div class="pinkcol" id="pinkCol" hidden><h3>💖 Pink collection <span id="pinkCount"></span></h3><div class="pinkset" id="pinkSetEl"></div></div>
+        <div class="eggcol" id="eggCol"><h3>🥚 Aingegg collection <span id="eggCount"></span></h3><div class="eggset" id="eggSetEl"></div></div>
       </div>
     </aside>
   </div>
@@ -420,13 +442,13 @@ const RANKS=['E','D','C','B','A','S'];
 const RCOL=['#9196ad','#6fb7ff','#3fd8e8','#ff7fd0','#ffb347','#7be38b'];
 const DRANKS=['Junior','Senior','Veteran','Elite','Master'];
 const ODDS_BY=[[38,28,17,10,5,2],[26,30,22,12,6,4],[14,27,27,16,10,6],[5,14,36,24,13,8],[0,5,38,28,18,11]]; // % per deploy, E..S
-const RBASE=[8.9,11.8,16.3,32.5,44.4,75.1];         // base damage/sec by rank
-const LVF=.734;                           // each level adds ~83% of the base of the rank it was bought at
+const RBASE=[36.3,46.8,54,69.2,92.2,132.3];         // base damage/sec by rank
+const LVF=.506;                           // each level adds ~half the base of the rank it was bought at
 const DEPLOY=150, START_PTS=0, PTS_PER_MIN=300, WAVE_T=60, SPAWN_T=80, CAP=50;
 const WAVE_TS=[90,90,60,60,59,58,57,56,55,54];   // seconds per wave: 1:00 each (10-minute run)
-const MOBHP=[138,154,189,254,423,423,498,525,809,1488];   // HP per mob, rises every wave
+const MOBHP=[417,532,558,703,1309,1665,2023,2252,2290,2422];   // HP per mob, rises every wave (tough mobs = steady kill pace, backlog carries over)
 const MOBN=[30,30,21,38,25,30,30,32,28,32];   // mobs per wave (+ bosses below); waves 1-6 and 9 from the real event
-const BOSSES=[[],[],[2396],[],[3619],[4428,4428],[5067,5067],[5471,5471],[5729,5729,5729,5729],[5729,5729,5729,8364]];   // boss HP, rises every wave; last one in wave 10 is the big boss
+const BOSSES=[[],[],[1724],[],[4045],[5144,5144],[6253,6253],[6958,6958],[7080,7080,7080,7080],[7484,7484,7484,8756]];   // boss HP ~3 mobs' worth, rises every wave; last one in wave 10 is the big boss
 const BAYS=[
   {name:'Red',col:'#d91410',trim:'#ff7a3a',norm:2,boss:1,role:'2× damage to normal enemies'},
   {name:'Black',col:'#3a3a58',trim:'#ffc94a',norm:1,boss:2,role:'2× damage to bosses'},
@@ -449,6 +471,9 @@ let speed=(v=>[1,1.5,2,3,4,5].includes(v)?v:1)(store.get('speed',1));
 const slotDps=s=>s?RBASE[s.rank]+s.lv.reduce((a,r)=>a+RBASE[r]*LVF,0):0;
 const lvCost=s=>100+5*s.lv.length;
 if(P.play==null||P.play>P.drank)P.play=P.drank;
+P.lookSet=store.get('lookSet',[]);const COLLECT=[['E',0],['D',6],['C',2],['C',1],['B',3],['A',4],['S',5],['S',10],['S',11],['S',13],['S',14],['S★',7],['S★',8],['S★',9]];   // every regular look, in rank order; S★ = summoned (Buy S) cats
+const eggCount=()=>COLLECT.filter(([,m])=>P.lookSet.includes(m)).length;
+function noteLook(i){const s=G.slots[i];if(!s||s.pink||P.lookSet.includes(s.look))return '';P.lookSet.push(s.look);store.set('lookSet',P.lookSet);const n=eggCount();return n===COLLECT.length?' · ✦ full Aingegg collection!':` · new for your collection (${n}/${COLLECT.length})`}
 P.pity=store.get('pity',0);P.pinkFound=store.get('pinkFound',false);P.pinkSet=store.get('pinkSet',[0,0,0,0,0,0]);const pinkChance=()=>Math.min(PINK_MAX,PINK_CHANCE+PINK_STEP*Math.floor((G.pity||0)/PINK_EVERY));   // 1%, +1% for every wasted Go this run (max 6%); resets each run and when she appears   // the Mate rank you're playing at (any rank you've unlocked)
 function setPlay(k){if(k<0||k>P.drank||k===P.play)return;if((G.phase==='live'||G.phase==='count')&&G.deploys){popup('bad','Mid-run','Finish or restart this run before switching Mate rank.');return}
   P.play=k;store.set('play',k);render()}
@@ -466,9 +491,9 @@ function deploy(){if(paused)return;if(G.phase==='idle'){beginCombat();return}
   G.sNext=false;G.pNext=false;
   let msg;
   const empty=[0,1,2].find(i=>!G.slots[i]);
-  if(empty!==undefined){G.slots[empty]={rank:r,lv:[],pop:.6,pink,look:pickLook(r,forced,empty),lookRank:r};if(pink)pinkParty(empty,r,testPink);greet(empty);msg=`${BAYS[empty].name} bay filled`;}
+  if(empty!==undefined){G.slots[empty]={rank:r,lv:[],pop:.6,pink,look:pickLook(r,forced,empty),lookRank:r};if(pink)pinkParty(empty,r,testPink);greet(empty);msg=`${BAYS[empty].name} bay filled`+noteLook(empty);}
   else{const low=lowRank,weakest=[0,1,2].filter(k=>G.slots[k].rank===low),i=r>low?weakest[Math.floor(Math.random()*weakest.length)]:undefined;   // replaces your weakest; ties pick one at random
-    if(i!==undefined){const old=G.slots[i].rank,wasPink=G.slots[i].pink;G.slots[i].rank=r;G.slots[i].look=pickLook(r,forced,i);G.slots[i].lookRank=r;G.slots[i].pink=pink;G.slots[i].pop=.6;greet(i);if(wasPink&&!pink)G.slots[i].say={txt:'vibye',l:2.4};msg=`${BAYS[i].name}: ${RANKS[old]} → ${RANKS[r]}, keeps Lv ${G.slots[i].lv.length}`;
+    if(i!==undefined){const old=G.slots[i].rank,wasPink=G.slots[i].pink;G.slots[i].rank=r;G.slots[i].look=pickLook(r,forced,i);G.slots[i].lookRank=r;G.slots[i].pink=pink;G.slots[i].pop=.6;greet(i);if(wasPink&&!pink)G.slots[i].say={txt:'vibye',l:2.4};msg=`${BAYS[i].name}: ${RANKS[old]} → ${RANKS[r]}, keeps Lv ${G.slots[i].lv.length}`+noteLook(i);
       if(pink)pinkParty(i,r,testPink);else popup('good',r===5?'S-rank!':'Rank up!',`${BAYS[i].name} bay: <span style="color:${RCOL[r]}">${RANKS[r]}</span> replaces ${RANKS[old]}. Levels kept.`)}
     else{msg=`Nothing happened (${RANKS[r]} wasn't above your ${RANKS[low]})`;G.pity=(G.pity||0)+1;   // pink pity builds on wasted Gos
       const rk=`<span style="color:${RCOL[r]}">${RANKS[r]}</span>`,L=pink?NOPE_PINK:NOPE;popup('bad','Nothing happened',L[Math.floor(Math.random()*L.length)].replace('{r}',rk),3000)}}
@@ -654,7 +679,7 @@ function drawShip(c,x,y,bay,rank,t,firing,lv=0,pink=false){
 function lighten(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b2=n&255;const red=r>170&&g<70&&b2<70,T=red?[255,170,80]:[255,255,255];   // reds brighten toward orange, not pink
   r=Math.round(r+(T[0]-r)*f);g=Math.round(g+(T[1]-g)*f);b2=Math.round(b2+(T[2]-b2)*f);return `rgb(${r},${g},${b2})`}
 const COW_BLUE={body:'#4fa8ff',ear:'#2a6fd6',spot:'#a6d4ff',muzzle:'#bfe3ff',nose:'#1d4f9e',horn:'#f3ead2'};
-const COW_HUES=Array.from({length:10},(_,i)=>Math.round(50+i*165/9));   // wave cows shift from yellow (wave 1) through green to blue (wave 10), alternating light/dark so new arrivals stand out; bosses stay pink
+const COW_HUES=Array.from({length:10},(_,i)=>Math.round(50+i*225/9));   // wave cows shift from yellow (wave 1) through green and blue to purple (wave 10), alternating light/dark so new arrivals stand out; bosses stay pink
 const COW_WAVE=COW_HUES.map((h,i)=>{const L=i%2?54:66;return {body:`hsl(${h},78%,${L}%)`,ear:`hsl(${h},70%,${L-20}%)`,spot:`hsl(${h},90%,${L+16}%)`,muzzle:`hsl(${h},90%,${Math.min(90,L+24)}%)`,nose:`hsl(${h},65%,26%)`,horn:'#f3ead2'}});
 const COW_PINK={body:'#ff6fb5',ear:'#d63f8e',spot:'#ffc2e0',muzzle:'#ffd6ea',nose:'#a3245f',horn:'#ffc94a'};
 function drawCow(x,y,r,pal,hit,sw){
@@ -760,9 +785,10 @@ function rainStep(){if(!rainOn||document.hidden)return;
   for(let i=0;i<RCOLS;i++){const y=drops[i]*14;if(y>0){rc.fillStyle=Math.random()<.08?'#eaffea':'#7cff7a';rc.fillText(RAIN_CH[Math.floor(Math.random()*RAIN_CH.length)],i*14+2,y)}
     drops[i]+=1;if(y>380&&Math.random()>.96)drops[i]=Math.random()*-8}}
 function heartAt(c,x,y,r){c.save();c.translate(x,y);c.fillStyle=PINKCOL;c.beginPath();c.moveTo(0,r*.9);c.bezierCurveTo(-r*1.6,-r*.15,-r*.65,-r*1.3,0,-r*.35);c.bezierCurveTo(r*.65,-r*1.3,r*1.6,-r*.15,0,r*.9);c.fill();c.fillStyle='rgba(255,255,255,.75)';c.beginPath();c.arc(-r*.42,-r*.42,r*.22,0,7);c.fill();c.restore()}
-function renderPinkCol(){const pc=$('pinkCol'),k=P.pinkSet.join('');if(pc._k===k)return;pc._k=k;const n=P.pinkSet.filter(Boolean).length;pc.hidden=!n;if(!n)return;$('pinkCount').textContent=n+'/6';pc.classList.toggle('full',n===6);
-  $('pinkSetEl').innerHTML=PINKLOOK.map((m,r)=>`<div class="${P.pinkSet[r]?'got':''}" title="${P.pinkSet[r]?'Pink '+RANKS[r]+' found':'Not found yet'}"><b>${RANKS[r]}</b><img src="${MASCOTS[m].src}" alt=""></div>`).join('')}
-function render(){renderOdds();renderPinkCol();{const rb=$('rankBtn'),ov=P.play<P.drank,k=ov?P.play:-1;if(rb._k!==k){rb._k=k;rb.classList.toggle('on',ov);rb.innerHTML=ov?`Rank Override<small>${DRANKS[P.play]}</small>`:'Rank Override'}}for(let i=0;i<3;i++){const sl=G.slots[i],el2=$('role'+i),txt=(sl&&sl.pink?'💖 Pink '+BAYS[i].name:BAYS[i].name)+' · '+BAYS[i].role;if(el2&&el2.textContent!==txt)el2.textContent=txt;const bd=el2&&el2.closest&&el2.closest('.bay');if(bd)bd.classList.toggle('pinkbay',!!(sl&&sl.pink))}$('begin').hidden=G.phase!=='idle';if(rainMode!==fxMode())renderHacked();
+function renderEggCol(){const ec=$('eggCol'),k=P.lookSet.join(',')+'|'+P.pinkSet.join('');if(ec._k===k)return;ec._k=k;const tot=COLLECT.length+PINKLOOK.length,n=eggCount()+P.pinkSet.filter(Boolean).length;$('eggCount').textContent=n+'/'+tot;ec.classList.toggle('full',n===tot);
+  const tiles=[];RANKS.forEach((R,r)=>{COLLECT.filter(([x])=>x===R||(r===5&&x==='S★')).forEach(([x,m])=>tiles.push({lab:x,m,got:P.lookSet.includes(m)}));tiles.push({lab:R+'♡',m:PINKLOOK[r],got:!!P.pinkSet[r],pk:1})});   // by rank: regular looks, then that rank's pink
+  $('eggSetEl').innerHTML=tiles.map(t=>`<div class="${t.pk?'pk ':''}${t.got?'got':''}" title="${t.got?'Found':'Not found yet'}"><b>${t.lab}</b><img src="${MASCOTS[t.m].src}" alt=""></div>`).join('')}
+function render(){renderOdds();renderEggCol();{const rb=$('rankBtn'),ov=P.play<P.drank,k=ov?P.play:-1;if(rb._k!==k){rb._k=k;rb.classList.toggle('on',ov);rb.innerHTML=ov?`Rank Override<small>${DRANKS[P.play]}</small>`:'Rank Override'}}for(let i=0;i<3;i++){const sl=G.slots[i],el2=$('role'+i),txt=(sl&&sl.pink?'💖 Pink '+BAYS[i].name:BAYS[i].name)+' · '+BAYS[i].role;if(el2&&el2.textContent!==txt)el2.textContent=txt;const bd=el2&&el2.closest&&el2.closest('.bay');if(bd)bd.classList.toggle('pinkbay',!!(sl&&sl.pink))}$('begin').hidden=G.phase!=='idle';if(rainMode!==fxMode())renderHacked();
   $('pts').textContent=Math.floor(G.pts);
   const live=G.phase!=='idle';
   $('dr').textContent=DRANKS[P.play]+' Mate';{const pp=$('pips5'),k=P.drank+'|'+P.play;if(pp._k!==k){pp._k=k;pp.innerHTML=DRANKS.map((n,i)=>`<b data-k="${i}" class="${i===P.play?'cur':i<=P.drank?'on':'locked'}" title="${n} Mate${i>P.drank?' (locked)':i===P.play?' (playing)':' (unlocked)'}" aria-label="${n} Mate${i>P.drank?' (locked)':''}"></b>`).join('')}}$('wv').textContent='WAVE '+G.wave;
@@ -828,7 +854,7 @@ $('gold').onclick=goldHatch;
 $('pinkNext').onclick=()=>{if(G.phase==='over'||G.pNext)return;G.sNext=false;G.pNext='test';$('hackMenu').hidden=true;popup('pink','💖 Pink Aingegg armed 💖','Your next <span class="hl">Go</span> will be a Pink Aingegg. (Test button: doesn\'t mark you as hacked.)',3000);render()};
 $('wipe').onclick=()=>{$('quitBox').hidden=true;$('wipeBox').hidden=false;$('wipeNo').focus()};
 $('wipeNo').onclick=()=>{$('wipeBox').hidden=true};
-$('wipeYes').onclick=()=>{G.sNext=false;G.pNext=false;hackUnlocked=false;store.set('hackUnlocked',false);renderHackLock();$('hackMenu').hidden=true;P.hacked=false;store.set('hacked',false);P.runs=0;store.set('runs',0);$('wipeBox').hidden=true;P.drank=0;P.play=0;store.set('play',0);P.pinkFound=false;store.set('pinkFound',false);P.pinkSet=[0,0,0,0,0,0];store.set('pinkSet',P.pinkSet);P.pity=0;store.set('pity',0);P.clears=0;P.best=0;P.earned=0;$('pop').hidden=true;
+$('wipeYes').onclick=()=>{G.sNext=false;G.pNext=false;hackUnlocked=false;store.set('hackUnlocked',false);renderHackLock();$('hackMenu').hidden=true;P.hacked=false;store.set('hacked',false);P.runs=0;store.set('runs',0);$('wipeBox').hidden=true;P.drank=0;P.play=0;store.set('play',0);P.pinkFound=false;store.set('pinkFound',false);P.pinkSet=[0,0,0,0,0,0];store.set('pinkSet',P.pinkSet);P.lookSet=[];store.set('lookSet',[]);P.pity=0;store.set('pity',0);P.clears=0;P.best=0;P.earned=0;$('pop').hidden=true;
   ['drank','clears','best','earned'].forEach(k=>store.set(k,P[k]));fresh();$('result').hidden=true;render()};
 const SPEEDS=[1,1.5,2,3,4,5];
 function renderSpeed(){const i=SPEEDS.indexOf(speed),max=i===SPEEDS.length-1,b=$('spd');
