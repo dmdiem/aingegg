@@ -47,9 +47,9 @@ body{font-family:var(--body);font-size:15px;padding:0 16px}
 .wavebox 
 .dr{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--gold)}
 .wavebox .tm{font-family:var(--display);font-size:28px;font-variant-numeric:tabular-nums;color:var(--ink)}
-.rewardbox{background:#0f0c28;border:1px solid var(--line);border-radius:12px;padding:6px 10px;text-align:right;min-width:92px}
+.rewardbox{background:#0f0c28;border:1px solid var(--line);border-radius:12px;padding:6px 10px;text-align:left;min-width:92px}   /* left-aligned like Aing points */
 .rewardbox{display:flex;flex-direction:column;justify-content:space-between;gap:4px;padding:5px 10px}
-.rewardbox .rewhalf{display:flex;flex-direction:column;align-items:flex-end}
+.rewardbox .rewhalf{display:flex;flex-direction:column;align-items:flex-start}
 .rewardbox .rewhalf+.rewhalf{border-top:1px solid var(--line);padding-top:3px}
 .rewardbox .rewhalf b{display:flex;align-items:center;gap:5px;font-size:17px;line-height:1.1}
 .rewardbox .rewhalf b span{display:inline;font-size:inherit;letter-spacing:0;color:inherit;text-transform:none}
@@ -228,6 +228,7 @@ button:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
 .result .resdeps b{color:var(--holo);font-family:var(--display);font-weight:400;font-size:17px;margin-right:4px}
 .result .quip{margin:-4px 0 0;font-size:17px;font-weight:700;color:var(--ink);letter-spacing:.02em}
 .result h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,7vw,44px);margin:0;line-height:1}
+.result .reswave{font-family:var(--display);font-size:clamp(16px,3.6vw,22px);color:var(--ink);letter-spacing:.06em;margin-top:-4px}
 .result .sq{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .result .sq .rc{background:var(--hull-2);border:1px solid var(--line);border-radius:10px;padding:6px;width:96px;position:relative;font-weight:700;font-variant-numeric:tabular-nums}
 .result .sq .rc canvas{width:calc(100% - 12px);display:block}
@@ -261,6 +262,7 @@ button:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
 .log .r{font-family:var(--display)}
 .log .w{color:var(--muted)}
 .eggi{width:16px;height:16px;object-fit:contain;vertical-align:-3px;margin-right:4px}
+.eggi.ecost{width:12px;height:12px;margin:0 0 0 3px;vertical-align:-2px}
 .eggi.big{width:34px;height:34px;margin:0}
 .stash{display:flex;align-items:center;gap:10px}
 .stash b{font-family:var(--display);font-weight:400;font-size:26px;color:var(--gold);font-variant-numeric:tabular-nums}
@@ -428,6 +430,7 @@ a{color:var(--holo)}
 }
 @media (prefers-reduced-motion:reduce){.field.warn{animation:none;border-color:var(--danger)}}
 </style>
+
 </head>
 <body>
 <div class="wrap">
@@ -504,6 +507,7 @@ a{color:var(--holo)}
       </div>
       <div class="result" id="result" hidden>
         <h2 id="resTitle">ALL CLEAR</h2>
+        <div class="reswave" id="resWave" hidden></div>
         <p class="quip" id="resQuip"></p>
         <div class="sq" id="resSquad"></div>
         <div><div class="amt"><img class="eggi" id="resIcon" alt=""><span id="resAmt">500</span></div><div class="note" id="resItem"></div></div>
@@ -589,13 +593,13 @@ const RANKS=['E','D','C','B','A','S'];
 const RCOL=['#9196ad','#6fb7ff','#3fd8e8','#ff7fd0','#ffb347','#7be38b'];
 const DRANKS=['Junior','Senior','Veteran','Elite','Master'];
 const ODDS_BY=[[38,28,17,10,5,2],[26,30,22,12,6,4],[14,27,27,16,10,6],[5,14,36,24,13,8],[0,5,38,28,18,11]]; // % per deploy, E..S
-const RBASE=[36.3,46.8,54,69.2,92.2,132.3];         // base damage/sec by rank
-const LVF=.506;                           // each level adds ~half the base of the rank it was bought at
+const RBASE=[5.8,6.5,10,16.1,25.6,41.7];         // base damage/sec by rank
+const LVF=0.618;                           // each level adds ~half the base of the rank it was bought at
 const DEPLOY=150, START_PTS=0, PTS_PER_MIN=300, WAVE_T=60, SPAWN_T=80, CAP=50;
-const WAVE_TS=[90,90,60,60,59,58,57,56,55,54];   // seconds per wave: 1:00 each (10-minute run)
-const MOBHP=[417,532,558,703,1309,1665,2023,2252,2290,2422];   // HP per mob, rises every wave (tough mobs = steady kill pace, backlog carries over)
-const MOBN=[30,30,21,38,25,30,30,32,28,32];   // mobs per wave (+ bosses below); waves 1-6 and 9 from the real event
-const BOSSES=[[],[],[1724],[],[4045],[5144,5144],[6253,6253],[6958,6958],[7080,7080,7080,7080],[7484,7484,7484,8756]];   // boss HP ~3 mobs' worth, rises every wave; last one in wave 10 is the big boss
+const WAVE_TS=[90,90,60,60,59,58,60,60,60,65];   // seconds per wave (real event timers)
+const MOBHP=[60,79,93,153,247,350,445,604,735,818];   // HP per mob, rises every wave (tough mobs = steady kill pace, backlog carries over)
+const MOBN=[30,30,21,38,25,30,34,34,35,43];   // mobs per wave (+ bosses below), all from the real event
+const BOSSES=[[],[],[394],[],[911],[1363,1363],[1925,1925],[2589,2589,2589],[2891,2891,2891,2891],[3622,6556]];   // boss HP ~4-5 mobs' worth, rises every wave; last one in wave 10 is the big boss
 const BAYS=[
   {name:'Red',col:'#d91410',trim:'#ff7a3a',norm:2,boss:1,role:'2× damage to normal enemies'},
   {name:'Black',col:'#3a3a58',trim:'#ffc94a',norm:1,boss:2,role:'2× damage to bosses'},
@@ -1034,8 +1038,9 @@ function renderMeter(){$('meter').style.width=(G.meter/300*100)+'%';const full=G
 function collectPts(){G.meter=0;G.pts+=300;G.ptsEarned+=300;if(G.phase==='live'&&G.wave===0)startWave(1)}
 $('collect').onclick=()=>{if(!paused&&G.meter>=300){collectPts();render()}};
 let autoCollect=hasUnl('ac')&&store.get('auto',false);
+function eggTag(){let src='';try{src=EGG_ICON}catch(e){}return `<img class="eggi ecost" src="${src}" alt=" eggs">`}   // same egg icon as Buy S, used on every egg price
 function renderAuto(){for(const [id,on] of [['auto',autoCollect],['autoLv',autoLevel]]){const b=$(id);b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}
-  for(const [id,k,l] of [['auto','ac','Auto-collect'],['autoLv','al','Auto-level']]){const b=$(id),h=hasUnl(k)?l:`${l}<small>🔒 ${UNLOCK[k]} eggs</small>`;if(b&&b._h!==h){b._h=h;b.innerHTML=h}}}
+  for(const [id,k,l] of [['auto','ac','Auto-collect'],['autoLv','al','Auto-level']]){const b=$(id),h=hasUnl(k)?l:`${l}<small>🔒 ${UNLOCK[k]}${eggTag()}</small>`;if(b&&b._h!==h){b._h=h;b.innerHTML=h}}}
 let unlDo=null,unlNo=null;
 function askUnlock(title,cost,what,done,cancel){unlNo=cancel||null;{const ub=$('unlBox');if(ub&&ub.classList)ub.classList.toggle('onsheet',innerWidth<=880&&['shopMenu','optMenu','colMenu'].some(id=>{const e=$(id);return e&&e.hidden===false}))}   // on phones the side tabs are full-screen sheets, so float above them
 const have=P.earned,ok=have>=cost;['rankMenu','hackMenu','quitBox','wipeBox','ovrBox'].forEach(id=>{const e=$(id);if(e)e.hidden=true});
@@ -1110,7 +1115,7 @@ function renderBoosts(){$('stash').textContent=P.god?'∞':P.earned.toLocaleStri
 const CLEAR_QUIPS=['nice werk mat','good werk mat','good job mat','gz mat'];
 function showResult(){const r=G.result;
   $('resQuip').textContent=r.kind==='clear'?CLEAR_QUIPS[Math.floor(Math.random()*CLEAR_QUIPS.length)]:'nice try mat';
-  $('resTitle').textContent=G.won?(P.hacked?'YOU BEAT THE GAME*':'YOU BEAT THE GAME'):r.kind==='clear'?'ALL CLEAR':r.kind==='w10'?'WAVE 10':'GAME OVER · WAVE '+r.reached;
+  $('resTitle').textContent=G.won?(P.hacked?'YOU BEAT THE GAME*':'YOU BEAT THE GAME'):r.kind==='clear'?'ALL CLEAR':r.kind==='w10'?'WAVE 10':'GAME OVER';{const rw=$('resWave'),sh=!G.won&&r.kind==='cap'&&r.done>0;rw.hidden=!sh;rw.textContent=sh?'WAVE '+r.done:''}   // under GAME OVER: the last wave you actually survived (the one you're paid for)
   $('resTitle').style.color=r.kind==='clear'?'var(--rS)':r.kind==='w10'?'var(--gold)':'var(--danger)';
   $('resSquad').innerHTML=G.slots.map((s,i)=>`<div class="rc"><span class="rank" style="color:${s?RCOL[s.rank]:'var(--muted)'}">${s?RANKS[s.rank]:'–'}</span><canvas id="rp${i}" width="100" height="90"></canvas><div class="vbar${s&&s.lv.length>=10?' max':''}" style="top:8px;bottom:26px;right:5px">${Array.from({length:10},(_,k)=>s&&k<s.lv.length?`<i class="on" style="background:${RCOL[s.lv[k]]};color:${RCOL[s.lv[k]]}"></i>`:'<i></i>').join('')}</div><div class="lv">${s?'▲ '+s.lv.length:'Empty'}</div></div>`).join('');
   G.slots.forEach((s,i)=>{if(s){const c=$('rp'+i).getContext('2d');drawMascot(c,i,s.rank,0,0,lookOf(s))}});
@@ -1181,10 +1186,11 @@ const EGG_ICON=(()=>{const k=document.createElement('canvas');k.width=k.height=6
   c.fillStyle=g;eggPath(c,32,33,40,54);c.fill();c.strokeStyle='rgba(120,70,40,.35)';c.lineWidth=1.5;c.stroke();
   c.fillStyle='rgba(255,255,255,.75)';c.beginPath();c.ellipse(24,20,4,7,.4,0,7);c.fill();return k.toDataURL()})();
 ['rewIcon','resIcon','stashIcon','goldIcon'].forEach(id=>$(id).src=EGG_ICON);
+$('auto')._h=$('autoLv')._h=null;renderAuto();   // redraw the lock labels now that the egg icon exists
 render();requestAnimationFrame(loop);
 /* ---------- Optimizer: keep pressing Go, or stop and level? ---------- */
 // OPT_TABLE[squad][n-3] = how far that squad gets with n total deploys (C = all clear, T = wave 10), from this game's battle sim
-var OPT_TABLE={"EEE":"76665444444444","EED":"76666544444444","EEC":"77766554444444","EEB":"88777665555555","EEA":"TT998765555555","EES":"TTTTTTT7655555","EDE":"66655444444444","EDD":"77666554444444","EDC":"77766555555555","EDB":"88777665555555","EDA":"99988765555555","EDS":"TTTTTTT7655555","ECE":"66665554444444","ECD":"66665555555555","ECC":"77766655555555","ECB":"88777665555555","ECA":"99998765555555","ECS":"TTTTTTT7655555","EBE":"77666555555555","EBD":"77666655555555","EBC":"77766655555555","EBB":"88877665555555","EBA":"TT998776555555","EBS":"TTTTTTT8666666","EAE":"87776655555555","EAD":"88777665555555","EAC":"88777665555555","EAB":"98877665555555","EAA":"TTT99876555555","EAS":"CCCTTTT9766666","ESE":"T9988765555555","ESD":"T9998776555555","ESC":"TT998776555555","ESB":"TTT99876655555","ESA":"CTTT9876666666","ESS":"CCCCCCTT766666","DEE":"77766554444444","DED":"87776655555555","DEC":"87766655555555","DEB":"99877665555555","DEA":"TTT98775555555","DES":"TTTTTTT7655555","DDE":"77776654444444","DDD":"88776655555555","DDC":"87766655555555","DDB":"99877665555555","DDA":"TTTT8876555555","DDS":"TTTTTTT8666666","DCE":"66666555555555","DCD":"76666555555555","DCC":"77776655555555","DCB":"88877665555555","DCA":"T9998876555555","DCS":"TTTTTTT8666666","DBE":"77666655555555","DBD":"77766655555555","DBC":"77766655555555","DBB":"98877665555555","DBA":"TTT99876555555","DBS":"CTTTTTT9766666","DAE":"88777665555555","DAD":"98877665555555","DAC":"88777665555555","DAB":"99877666555555","DAA":"TTTT9876655555","DAS":"CCCTTTT9766666","DSE":"TT998776555555","DSD":"TTT98776555555","DSC":"TTT99876655555","DSB":"TTTT9876655555","DSA":"CTTTT887666666","DSS":"CCCCCCTT866666","CEE":"88777655555555","CED":"88877665555555","CEC":"98877665555555","CEB":"T9877665555555","CEA":"TTTT9876555555","CES":"TTTTTTT8666666","CDE":"88777665555555","CDD":"88877665555555","CDC":"98877665555555","CDB":"T9887665555555","CDA":"TTTT9876555555","CDS":"TTTTTTT8766666","CCE":"88777665555555","CCD":"88877665555555","CCC":"99877665555555","CCB":"T9887665555555","CCA":"TTTT9876555555","CCS":"TTTTTTT9766666","CBE":"87766655555555","CBD":"87766655555555","CBC":"87766665555555","CBB":"98877765555555","CBA":"TTT99876655555","CBS":"CTTTTTT9766666","CAE":"98877665555555","CAD":"99877665555555","CAC":"99877665555555","CAB":"T9877766555555","CAA":"TTTT9876666666","CAS":"CCCTTTTT766666","CSE":"TTT99776555555","CSD":"TTT99876655555","CSC":"TTTT9876655555","CSB":"TTTT9876666666","CSA":"CCTTT987666666","CSS":"CCCCCCTT866666","BEE":"99988765555555","BED":"T9998765555555","BEC":"TTT98765555555","BEB":"TTTT9776555555","BEA":"TTTTT876655555","BES":"CTTTTTTT766666","BDE":"99988765555555","BDD":"TT998765555555","BDC":"TTT98776555555","BDB":"TTTT9876555555","BDA":"TTTTT876655555","BDS":"CCTTTTTT766666","BCE":"99988765555555","BCD":"99998765555555","BCC":"TTT99876555555","BCB":"TTTT9876555555","BCA":"TTTTT876655555","BCS":"CCTTTTTT766666","BBE":"TT998765555555","BBD":"TT998776555555","BBC":"TT999876555555","BBB":"TTTT9876655555","BBA":"TTTTT986666666","BBS":"CCCTTTTT766666","BAE":"TT877665555555","BAD":"TT977766555555","BAC":"TT977766555555","BAB":"TT987766666666","BAA":"TTTT9987666666","BAS":"CCCCTTTT966666","BSE":"TTTT9876655555","BSD":"CTTT9876666666","BSC":"CTTT9876666666","BSB":"CTTTT987666666","BSA":"CCTTT987766666","BSS":"CCCCCCCTT76666","AEE":"TTTTTT96555555","AED":"TTTTTT96655555","AEC":"TTTTTTT6655555","AEB":"TTTTTTT7655555","AEA":"TTTTTTT8666666","AES":"CCCCTTTT866666","ADE":"TTTTTT96555555","ADD":"TTTTTT97655555","ADC":"TTTTTTT7655555","ADB":"TTTTTTT7655555","ADA":"TTTTTTT8766666","ADS":"CCCCTTTT866666","ACE":"TTTTTT96655555","ACD":"TTTTTT97655555","ACC":"TTTTTTT7655555","ACB":"TTTTTTT7666666","ACA":"TTTTTTT8766666","ACS":"CCCCTTTT966666","ABE":"TTTTTT97655555","ABD":"TTTTTT97655555","ABC":"TTTTTTT7655555","ABB":"TTTTTTT8666666","ABA":"CTTTTTT9766666","ABS":"CCCCCTTTT76666","AAE":"TTTTTTT7655555","AAD":"CTTTTTT7666666","AAC":"CTTTTTT7666666","AAB":"CCCTTTT9766666","AAA":"CCTTTTT9766666","AAS":"CCCCCCTTT76666","ASE":"CCCCT987666666","ASD":"CCCCT987666666","ASC":"CCCCTT87666666","ASB":"CCCCTT87766666","ASA":"CCCCCT98766666","ASS":"CCCCCCCCT77666","SEE":"TTTTTTTTT66666","SED":"TTTTTTTTT66666","SEC":"TTTTTTTTT66666","SEB":"TTTTTTTTT66666","SEA":"CCCCTTTTT76666","SES":"CCCCCCCTTT7666","SDE":"CCCTTTTTT66666","SDD":"TTTTTTTTT66666","SDC":"CTTTTTTTT66666","SDB":"CTTTTTTTT66666","SDA":"CCCCCTTTT96666","SDS":"CCCCCCCTTT7666","SCE":"CCCCTTTTT66666","SCD":"CCCCTTTTT66666","SCC":"CTTTTTTTT66666","SCB":"CCTTTTTTT66666","SCA":"CCCCCTTTTT6666","SCS":"CCCCCCCTTT7666","SBE":"CCCCCCTTT66666","SBD":"CCCCCCTTT66666","SBC":"CCCCCCTTT66666","SBB":"CCCTTTTTT76666","SBA":"CCCCCTTTTT6666","SBS":"CCCCCCCCTT7666","SAE":"CCCCCCCCT66666","SAD":"CCCCCCCCT76666","SAC":"CCCCCCCCT76666","SAB":"CCCCCCCCTT6666","SAA":"CCCCCCTTTT7666","SAS":"CCCCCCCCTTT777","SSE":"CCCCCCCCC76666","SSD":"CCCCCCCCCT6666","SSC":"CCCCCCCCCT7666","SSB":"CCCCCCCCCT7666","SSA":"CCCCCCCCCT8777","SSS":"CCCCCCCCCTT777"};
+var OPT_TABLE={"EEE":"66655444444444","EED":"66555444444444","EEC":"77666544444444","EEB":"88877665555555","EEA":"99999886555555","EES":"TTTTTTT9966666","EDE":"55554444444444","EDD":"66555444444444","EDC":"77666554444444","EDB":"88777665555555","EDA":"99999886555555","EDS":"TTTTTTT9966666","ECE":"66655444444444","ECD":"66655444444444","ECC":"77666554444444","ECB":"88877665555555","ECA":"99999886655555","ECS":"TTTTTTT9966666","EBE":"77766554444444","EBD":"77766654444444","EBC":"77766655555555","EBB":"88877765555555","EBA":"99999887655555","EBS":"TTTTTTTTT66666","EAE":"88877765555555","EAD":"88877765555555","EAC":"88887765555555","EAB":"99887776555555","EAA":"99999987666666","EAS":"CCCTTTTTT86666","ESE":"99999987655555","ESD":"99999987655555","ESC":"99999988655555","ESB":"99999998766666","ESA":"TTTT9998866666","ESS":"CCCCCCCTT98666","DEE":"66665444444444","DED":"66665444444444","DEC":"77666554444444","DEB":"88877665555555","DEA":"99999986555555","DES":"TTTTTTT9966666","DDE":"66665444444444","DDD":"66665444444444","DDC":"77666554444444","DDB":"88877665555555","DDA":"99999986555555","DDS":"TTTTTTT9966666","DCE":"66655544444444","DCD":"66655544444444","DCC":"77666554444444","DCB":"88877765555555","DCA":"99999886655555","DCS":"TTTTTTT9966666","DBE":"77766654444444","DBD":"77766655555555","DBC":"77766655555555","DBB":"88877765555555","DBA":"99999887655555","DBS":"TTTTTTTTT66666","DAE":"88877765555555","DAD":"88877765555555","DAC":"88887765555555","DAB":"99887776655555","DAA":"99999987766666","DAS":"CCCTTTTTT96666","DSE":"99999987655555","DSD":"99999987655555","DSC":"99999998666666","DSB":"99999998766666","DSA":"TTTT9998866666","DSS":"CCCCCCCTT98666","CEE":"77776654444444","CED":"77776654444444","CEC":"88776655555555","CEB":"88887765555555","CEA":"99999987655555","CES":"TTTTTTT9986666","CDE":"77776654444444","CDD":"77776654444444","CDC":"88776655555555","CDB":"98887765555555","CDA":"99999987655555","CDS":"TTTTTTT9986666","CCE":"77776655555555","CCD":"77776655555555","CCC":"88777665555555","CCB":"98887765555555","CCA":"99999987655555","CCS":"TTTTTTT9986666","CBE":"77766655555555","CBD":"77776655555555","CBC":"87776665555555","CBB":"88887776555555","CBA":"99999888666666","CBS":"TTTTTTTTT96666","CAE":"88887765555555","CAD":"88887766555555","CAC":"88887776555555","CAB":"99888776655555","CAA":"99999998766666","CAS":"CCCTTTTTT97666","CSE":"99999998666666","CSD":"99999998666666","CSC":"99999998766666","CSB":"T9999998766666","CSA":"CTTTT999876666","CSS":"CCCCCCCTT98666","BEE":"88888875555555","BED":"88888875555555","BEC":"99888875555555","BEB":"99998886655555","BEA":"T9999998766666","BES":"TTTTTTTT996666","BDE":"88888875555555","BDD":"88888875555555","BDC":"99888876555555","BDB":"99998886655555","BDA":"T9999998766666","BDS":"TTTTTTTT996666","BCE":"88888875555555","BCD":"88888875555555","BCC":"99988876555555","BCB":"99998886655555","BCA":"TT999998766666","BCS":"TTTTTTTT997666","BBE":"99888876555555","BBD":"99888876555555","BBC":"99888886655555","BBB":"99998887666666","BBA":"TTT99998766666","BBS":"CTTTTTTT998666","BAE":"99988776655555","BAD":"99988776655555","BAC":"99988776666666","BAB":"99998877666666","BAA":"T9999998866666","BAS":"CCCCTTTTT98666","BSE":"TTT99998766666","BSD":"TTT99998766666","BSC":"TTT99998866666","BSB":"TTT99999876666","BSA":"CCTTT999877666","BSS":"CCCCCCCCT99777","AEE":"99999999755555","AED":"99999999755555","AEC":"99999999855555","AEB":"TT999999866666","AEA":"TTTTT999976666","AES":"CCCCTTTTT98666","ADE":"99999999755555","ADD":"99999999855555","ADC":"99999999855555","ADB":"TT999999866666","ADA":"TTTTT999986666","ADS":"CCCCTTTTT98666","ACE":"99999999855555","ACD":"99999999866666","ACC":"99999999866666","ACB":"TTT99999966666","ACA":"TTTTTT99986666","ACS":"CCCCTTTTT98666","ABE":"T9999999866666","ABD":"T9999999866666","ABC":"T9999999866666","ABB":"TTTTT999966666","ABA":"TTTTTT99986666","ABS":"CCCCCTTTT99777","AAE":"TTTTT999966666","AAD":"TTTTT999966666","AAC":"TTTTT999966666","AAB":"TTTTT999976666","AAA":"CCTTTTT9987666","AAS":"CCCCCCTTTT9777","ASE":"CCCCTT99876666","ASD":"CCCCTT99876666","ASC":"CCCCTT99876666","ASB":"CCCCTT99887666","ASA":"CCCCCT99987777","ASS":"CCCCCCCCTT9777","SEE":"TTTTTTTTT99666","SED":"TTTTTTTTT99666","SEC":"TTTTTTTTT99666","SEB":"TTTTTTTTT99666","SEA":"CCCCCTTTT99777","SES":"CCCCCCCCTT9977","SDE":"TTTTTTTTT99666","SDD":"TTTTTTTTT99666","SDC":"TTTTTTTTT99666","SDB":"TTTTTTTTT99666","SDA":"CCCCCTTTTT9777","SDS":"CCCCCCCCTT9977","SCE":"CCTTTTTTT99666","SCD":"CCTTTTTTT99666","SCC":"TTTTTTTTT99666","SCB":"TTTTTTTTT99666","SCA":"CCCCCTTTTT9777","SCS":"CCCCCCCCTT9977","SBE":"CCCCCCTTTT9666","SBD":"CCCCCCTTTT9666","SBC":"CCCCCCCTTT9666","SBB":"CCTTTTTTTT9666","SBA":"CCCCCCTTTT9777","SBS":"CCCCCCCCTTT977","SAE":"CCCCCCCCTT9666","SAD":"CCCCCCCCTT9666","SAC":"CCCCCCCCTT9666","SAB":"CCCCCCCCTT9777","SAA":"CCCCCCTTTTT777","SAS":"CCCCCCCCTTT977","SSE":"CCCCCCCCCTT777","SSD":"CCCCCCCCCTT777","SSC":"CCCCCCCCCTT777","SSB":"CCCCCCCCCTT777","SSA":"CCCCCCCCCCT977","SSS":"CCCCCCCCCTTT87"};
 var OPT_NMAX=16;
 var optMode='live',optGoal='clear',optMan={mate:4,n:0,sq:[-1,-1,-1]},optMemo=new Map(),optKey='';
 try{const sv=JSON.parse(localStorage.getItem('ss2_opt')||'null');if(sv&&Array.isArray(sv.sq)){optMan={...optMan,...sv};}}catch(e){}
@@ -1213,7 +1219,9 @@ function renderOpt(force){const m=$('optMenu');if(!OPT_TABLE||!m||m.hidden!==fal
   const stopBest=full&&(n>=OPT_NMAX||best.stop>=best.go-1e-9);let cls='',call,why;
   if(!full){call='Keep deploying';why='You still have an empty bay. Your first three Gos fill Red, Black and Yellow.'}
   else if(stopBest){cls='level';call='Stop and level';why=w===11?`This squad clears with ${n} deploys. More Gos now cost levels you need.`:`It won't clear, but more Gos make it worse on average. Level up and take the wave ${w} reward (${rewardFor(w)} eggs).`}
-  else{call='Keep deploying';why=w===11?'It clears as is, but another roll is worth it for your goal.':`Leveling now gets you to wave ${w} without a clear. Another Go gives you a better shot.`}
+  else{call='Keep deploying';why=w===11?'It clears as is, but another roll is worth it for your goal.':`Leveling everything now only gets you to wave ${w}. Keep rolling to replace your weaker bays.`;
+    {const sb=[0,1,2].filter(i=>sq[i]===5&&!(optMode==='live'&&G.slots[i]&&G.slots[i].lv.length>=10));   // S bays never get replaced, so their levels are never wasted
+     if(sb.length)why+=` Put any points you don't need for the next Go into your ${sb.map(i=>BAYS[i].name).join(' and ')} S. It never gets replaced, so those levels always count.`}}
   const hopeless=cv.v<.01,baseLevel=hopeless?(n>=OPT_NMAX||ev.stop>=ev.go-1e-9):cls==='level';   // keeping this run: if a clear is out of reach, go for the furthest wave instead
   const restart=full&&w!==11&&(optGoal==='clear'?fresh>cv.v+.05:freshE>ev.v+15);
   if(restart){cls='restart';call='Consider a restart';why=`From here the best play clears ${optPct(cv.v)} of the time. A fresh run clears ${optPct(fresh)}.`}
@@ -1263,11 +1271,11 @@ const frameOwned=f=>P.god||(f.pink?!!P.pinkFound:f.hack?!!hackUnlocked:P.frames.
 function applyFrame(){const f=FRAMES.find(x=>x.id===P.frame);if(!f||!frameOwned(f)){P.frame='teal'}const fl=$('field');if(fl&&fl.dataset)fl.dataset.frame=P.frame==='teal'||P.frame==='heart'||P.frame==='hack'?'':P.frame;if(typeof renderHacked==='function'&&G)renderHacked()}
 function renderShop(){const g=$('frameGrid');if(!g||!('innerHTML' in g))return;$('shopStash').textContent=P.god?'∞ eggs':P.earned.toLocaleString()+' eggs';
   g.innerHTML=FRAMES.filter(f=>!f.hack||frameOwned(f)).map(f=>{const own=frameOwned(f),on=P.frame===f.id;
-    const btn=on?'<button class="on" disabled>Equipped</button>':own?`<button data-fr="${f.id}">Equip</button>`:f.pink?'<button disabled>🔒 ???</button>':`<button class="buy" data-fr="${f.id}">🔒 ${f.cost} eggs</button>`;
+    const btn=on?'<button class="on" disabled>Equipped</button>':own?`<button data-fr="${f.id}">Equip</button>`:f.pink?'<button disabled>🔒 ???</button>':`<button class="buy" data-fr="${f.id}">🔒 ${f.cost}${eggTag()}</button>`;
     return `<div class="fcard"><div class="fprev" data-frame="${f.id==='teal'?'':f.id}"><canvas class="fpc" data-fp="${f.id}" width="120" height="90"></canvas></div><b>${f.name}</b>${btn}${f.pink&&!own?'<small>Unlocks if you find a secret rare egg.</small>':''}</div>`}).join('');
   g.querySelectorAll('canvas.fpc').forEach(cv=>drawThemePreview(cv,cv.dataset.fp));
   const bg=$('bulletGrid');bg.innerHTML=BULLETS.map(b=>{const own=bulletOwned(b),on=P.bullet===b.id;
-    const btn=on?'<button class="on" disabled>Equipped</button>':own?`<button data-bu="${b.id}">Equip</button>`:b.pink?'<button disabled>🔒 ???</button>':`<button class="buy" data-bu="${b.id}">🔒 ${b.cost} eggs</button>`;
+    const btn=on?'<button class="on" disabled>Equipped</button>':own?`<button data-bu="${b.id}">Equip</button>`:b.pink?'<button disabled>🔒 ???</button>':`<button class="buy" data-bu="${b.id}">🔒 ${b.cost}${eggTag()}</button>`;
     return `<div class="fcard"><div class="fprev"><canvas class="fpc" data-bp="${b.id}" width="120" height="90"></canvas></div><b>${b.name}</b>${btn}${b.pink&&!own?'<small>Unlocks if you find a secret rare egg.</small>':''}</div>`}).join('');
   bg.querySelectorAll('canvas[data-bp]').forEach(cv=>{const c=cv.getContext&&cv.getContext('2d');if(!c)return;const k=cv.dataset.bp;
     if(k==='beam'){c.lineCap='round';for(const[x,y]of[[40,28],[80,48]]){c.strokeStyle='#ff5b5b';c.globalAlpha=.3;c.lineWidth=10;c.beginPath();c.moveTo(x,y);c.lineTo(x,y+26);c.stroke();c.globalAlpha=1;c.lineWidth=4;c.beginPath();c.moveTo(x,y);c.lineTo(x,y+26);c.stroke()}}
@@ -1301,5 +1309,6 @@ function drawThemePreview(cv,id){const c=cv.getContext&&cv.getContext('2d');if(!
 
 })();
 </script>
+
 </body>
 </html>
